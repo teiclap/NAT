@@ -384,12 +384,51 @@ the same Internal-Port, Remote-Port, and Int-VTag.
 </t>
 
 <t>
-       Stateless NAT is assumed here, thus it will not make any chunk parsing,
-       all SCTP packets will be threated in the same way.
+       A new control chunk is defined as PATH-INIT. 
+       The objective of PATH-INIT is to initialize all the secondary paths
+       in a multihomed Association whilst avoiding collision in the NATs
+       between the SCTP Endpoints. 
+</t>
+<t>
+       Stateless NAT is assumed here, still it needs to implement chunk parsing,
+       all SCTP packets will be threated in the same way apart from INIT
+       and PATH-INIT.
+</t>
+<t>       
        A timer exists at the NAT on per each entry with timeout grater than
        twice the maximum HB time plus the maximum RTT, so that an entry will
        be removed only when the local SCTP Endpoint has ceased both sending
        traffic and HB packets on all the paths (i.e. the Association is closed)
+</t>
+<t>
+       Handling of PATH-INIT chunk at NAT depends on the NAT position in the path,
+       this because the purpose of the new chunk is to make it possible to create
+       a working path between SCTP Endpoints but cannot solve the last step
+       in case of Distributed SCTP Endpoint.
+       Here we make the distinction between Core NAT and Edge NAT, where Edge NAT
+       is the NAT where SCTP Endpoint termination are directly connected.
+       The Core NAT will threat the PATH-INIT exactly as the INIT chunk, as explained
+       in details in the following.
+       The Edge NAT will behave in a different way: in case of reception of an outgoing
+       PATH-INIT chunk, it will still behave as in the INIT case. In case of an incoming
+       PATH-INIT, it will still behave according to the INIT case, thus causing an ABORT
+       if conflict is detected,  but then it will be silently discarded at the NAT.
+       A PATH-INIT chunk will never reach an SCTP Endpoint termination, in case it does
+       then it will be seen as an Out Of The Blue Packet according 
+       to <xref target='RFC4960' />.
+</t>
+<t>
+       During Association initialization phase, the PATH-INIT chunk is used by the Client
+       SCTP Endpoint used immediately after the reception of INIT-ACK signal.
+       If the SCTP Endpoint is multihomed, it will send one PATH-INIT chunk on per
+       each pair (Local-Address, Remote-Address).
+       Those messages will not receive confirmation, they will be assumed to be implicitly
+       accepted when COOCKIE-ACK is received.
+       From the Server viewpoint, PATH-INIT chunks will be sent at the reception of INIT
+       chunk and they will be sent only in case of multihomed Association, in this case
+       one PATH-INIT chunk will be sent on per each pair (Local-Address, Remote-Address).
+       Those messages will not receive confirmation, they will be assumed to be implicitly
+       accepted when COOCKIE-ECHO is received. 
 </t>
 
 <t>The processing of outgoing SCTP packets containing an INIT chunk
