@@ -340,9 +340,15 @@ simple: the source address of the packets has to be replaced with the
 External-Address. It might also be necessary to establish some
 state in the NAT function to later handle incoming packets.</t>
 
+<t>
+In order to keep consistency among the variuos path of the multihomed
+associations, NAT is limited to IP address translation.
+No port translations is permitted for SCTP packets.        
+</t>
+
 <t>Typically, the NAT function has to maintain a NAT binding table
 of Internal-VTag, Internal-Port, Remote-VTag, Remote-Port, Internal-Address,
-and whether the restart procedure is disabled or not.
+Remote-Address and whether the restart procedure is disabled or not.
 An entry in that NAT binding table is called a NAT-State control block.
 The function Create() obtains the just mentioned parameters and returns
 a NAT-State control block.
@@ -353,19 +359,38 @@ interface.</t>
 destination address of the packets has to be replaced with the Internal-Address
 of the host to which the packet has to be delivered, if a NAT state entry is
 found.
-The lookup of the Internal-Address is based on the Remote-VTag, Remote-Port,
-Internal-VTag and the Internal-Port.</t>
+If no NAT state entry is found and the local SCTP Endpoint is a server,
+a load-distribution mechanism MAY exist at the NAT choosing which Internal-Address
+will be used for that message, in such case the NAT entry is created with
+the information related to Remote-Address, Remote-Port, Internal-Address and
+Internal-Port.
+The lookup of the Internal-Address is based on the Remote-Address, Remote-Port,
+and the Internal-Port.
+</t>
 
 <t>The entries in the NAT binding table need to fulfill some uniqueness
 conditions.
-There can not be more than one entry NAT binding table with the same pair of
-Internal-Port and Remote-Port.
+There can not be more than one entry NAT binding table with the same 4-uple of
+Internal-Address, Internal-Port, Remote-Address and Remote-Port.
+
+======== To be reviewed ======
 This rule can be relaxed, if all NAT binding table entries with the same
 Internal-Port and Remote-Port have the support for the restart
 procedure disabled (see <xref target='disrestart'/>).
 In this case there can not be no more than one entry with the same Internal-Port,
 Remote-Port and Remote-VTag and no more than one NAT binding table entry with
-the same Internal-Port, Remote-Port, and Int-VTag.</t>
+the same Internal-Port, Remote-Port, and Int-VTag.
+======= End =====
+</t>
+
+<t>
+       Stateless NAT is assumed here, thus it will not make any chunk parsing,
+       all SCTP packets will be threated in the same way.
+       A timer exists at the NAT on per each entry with timeout grater than
+       twice the maximum HB time plus the maximum RTT, so that an entry will
+       be removed only when the local SCTP Endpoint has ceased both sending
+       traffic and HB packets on all the paths (i.e. the Association is closed)
+</t>
 
 <t>The processing of outgoing SCTP packets containing an INIT chunk
 is illustrated in the following figure. This scenario is valid for all
@@ -396,25 +421,29 @@ message flows in this section.</t>
 </artwork>
 <t>Normally a NAT binding table entry will be created.</t>
 <t>However, it is possible that there is already a NAT binding table entry with
-the same Remote-Port, Internal-Port, and Internal-VTag
+the same Remote-Address, Remote-Port, Internal-Port,
 but different Internal-Address and the restart procedure is disabled.
 In this case the packet containing the INIT chunk MUST be dropped by the NAT
 and a packet containing an ABORT chunk SHOULD be sent to the SCTP host that
-originated the packet with the M bit set and 'VTag and Port Number Collision'
+originated the packet with the M bit set and 'Port Number Collision'
 error cause (see <xref target='mbitabort'/> for the format).
 The source address of the packet containing the ABORT chunk MUST be the
 destination address of the packet containing the INIT chunk.</t>
 <t>If an outgoing SCTP packet contains an INIT or ASCONF chunk and a matching
 NAT binding table entry is found, the packet is processed as a normal
 outgoing packet.</t>
-<t>It is also possible that a NAT binding table entry with the same Remote-Port
+<t>
+       ======== To be reviewed =============
+       It is also possible that a NAT binding table entry with the same Remote-Port
 and Internal-Port exists without an Internal-VTag conflict but there exists
 a NAT binding table entry with the same port numbers but a different
 Internal-Address and the restart procedure is not disabled.
 In such a case the packet containing the INIT chunk MUST be dropped by the NAT function
 and a packet containing an ABORT chunk SHOULD be sent to the SCTP host that
 originated the packet with the M bit set and 'Port Number Collision' error
-cause (see <xref target='mbitabort'/> for the format).</t>
+cause (see <xref target='mbitabort'/> for the format).
+     ======= End =====
+</t>
 <t>The processing of outgoing SCTP packets containing no INIT chunks
 is described in the following figure.</t>
 <artwork align="center">
@@ -466,8 +495,12 @@ in the Lookup() function or changed in the Update() function, respectively.</t>
                    Int-VTag
 ]]>
 </artwork>
+
 <t>In the case where the Lookup function fails because it does not find an
-entry, the SCTP packet is dropped.
+entry and the local SCTP Endpoint is a server, a load-distribution mechanism 
+MAY exist at the NAT choosing which Internal-Address will be used for that message, 
+in such case the NAT entry is created with the information related to Remote-Address, 
+Remote-Port, Internal-Address and Internal-Port.
 If it succeeds, the Update routine inserts the Remote-VTag
 (the Initiate-Tag of the INIT ACK chunk) in the NAT-State control block.</t>
 
@@ -522,6 +555,9 @@ following figure.</t>
                    Int-VTag
 ]]>
 </artwork>
+<t>
+       
+</t>
 </section>
 </section>
 
