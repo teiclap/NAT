@@ -7,36 +7,116 @@ In the scoped scenarios, NAT can be used for hiding SCTP clients, servers and fo
 in the sense that multiple SCTP servers are hidden and the choice of the one serving the client is decided
 by the NAT function implementing Load Balancing at Association Establishment time and kept for the Association Lifetime.
 
-An example of such a network is depicted below:
+The proposal doesn't require VTAG handling and the related avoidance/synchronization between server instances, 
+which the current proposal would require. 
+The NAT only does tracking individual paths, the egressing traffic creates return paths towards each instance
+avoids the need for VTAG handling.
+Tracking is thus handled by a single mechanism that is needed for all cases to deal with 
+multiple SCTP endpoints sending traffic towards the same remote address.
+
+
+The following basic scenarios are considered
+
+1) 
+                          +-------+
+[SCTP client C1]----------+       |
+[SCTP client C2]----------+  NAT  +-----
+[SCTP client C3]----------+       |     
+                          +-------+    
+Where SCTP Hosts implementing SCTP Endpoints C1,C2,C3 behave as pure clients, single-homed 
+
+2) 
+                          +-------+
+[SCTP server S1]----------+       |
+[SCTP server S2]----------+  NAT  +-----
+[SCTP server S3]----------+       |     
+                          +-------+    
+Where SCTP Hosts implementing SCTP Endpoints S1,S2,S3 behave as servers, single-homed 
+
+3)
+                          +-------+
+[SCTP server S1]----------+       |
+[SCTP server S1]----------+  LB   +-----
+[SCTP server S1]----------+       |     
+                          +-------+    
+Where SCTP Hosts implementing a ditributed SCTP Endpoint S1, behaving as a server, single-homed
+
+4)
+
++--------------+          +-------+
+|              +          |       |
+|SCTP client C1+----------+  NAT  +-----
+|              +----+  +--+       |
++--------------+    |  |  +-------+
+                    |  |
++--------------+    |  |  +-------+
+|              +--- |--+  |       |
+|SCTP client C2|    +-----+  NAT  +-----
+|              +----------+       |
++--------------+          +-------+
+Where SCTP Hosts implementing SCTP Endpoints C1,C2 behave as pure clients, multi-homed 
+
+5)
++--------------+          +-------+
+|              +          |       |
+|SCTP server S1+----------+  NAT  +-----
+|              +----+  +--+       |
++--------------+    |  |  +-------+
+                    |  |
++--------------+    |  |  +-------+
+|              +--- |--+  |       |
+|SCTP server S2|    +-----+  NAT  +-----
+|              +----------+       |
++--------------+          +-------+                    
+Where SCTP Hosts implementing SCTP Endpoints S1,S2 behave as servers, multi-homed 
+
+6)
++--------------+          +-------+
+|              +          |       |
+|SCTP server S1+----------+  LB   +-----
+|              +----+  +--+       |
++--------------+    |  |  +-------+
+                    |  |
++--------------+    |  |  +-------+
+|              +--- |--+  |       |
+|SCTP server S1|    +-----+  LB   +-----
+|              +----------+       |
++--------------+          +-------+     
+Where SCTP Hosts implementing a ditributed SCTP Endpoint S1, behaving as a server, multi-homed
+
+7) 
+Any complex scenario built with those such as:
 
                           +-------+
 [SCTP client C1]----------+       |
 [SCTP client C2]----------+  NAT  +-----+
 [SCTP client C3]----------+       |     |
                           +-------+     |    +------+
-                                        +----+  NAT |
+                                        +----+      |
 [SCTP server S1]-----------------------------+  LB  +------- IP A
-[SCTP server S2]-----------------------------+      |
+[SCTP server S1]-----------------------------+      |
                           +-------+  +-------+      |
 [SCTP client C4]----------+       |  |       +------+
 [SCTP client C5]----------+  NAT  +--+
                      +----+       |
 +--------------+     |    +-------+
 |              +-----+
-|SCTP server S3]          +-------+     
+|SCTP server S2]          +-------+     
 |              +----------+       |
 |--------------+          |  NAT  +------------------------- IP B
-[SCTP client C7]----------+       |
+[SCTP client C6]----------+       |
 [SCTP server S4]----------+       |
                           +-------+
 
 
 In the example above clients C1, C2, C3, C4, C5 and servers S1 and S2 share the same external IP A,
-client C7 exploits the external IP B and server S3 is multihomed and exploits IP A and IP B.
+client C6 exploits the external IP B and server S3 is multihomed and exploits IP A and IP B.
 Server S4 exploits IP B as well.
 
 Server S1 and S2 are seen as a single, distributed SCTP Endpoint, NAT LB does inspect Association
 requests and assignes the serving SCTP host based on a Load Sharing algorithm.
+
+---------------------------------------------------------------------------------------------------------
 
 It's important to state that unless being part of a SCTP Distributed Endpoint, the port number used
 when defining the SCTP Ednpoints of a SCTP server behind a NAT need to be unique.
