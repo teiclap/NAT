@@ -5,29 +5,27 @@ The main reason behind the proposal is to solve the problems that are rising beh
 of nodes that adopt SCTP as transport protocol being implemented in a Cloud environment, mostly
 in containerized way, that exploit NAT for redundancy and scalability reasons.
 The implementation of an SCTP Endpoint in those environment is ditributed among SCTP Hosts
-that expose the same SCTP Port, and are seen from the network as a single entity.
+that expose the same Port, and are seen from the network as a single entity.
 Often those distributed SCTP Endpoint are also multihomed.
 A typical example is the AMF node in 5G networks, related to the NG-C interface,
 (3GPP TS 38.412, TS 38.413), a similar case is the MME node in 4G network, related to the 
 S1-MME interface (3GPP TS 36.412, TS 36.413).
 
-On the other hand, a NAT supporting SCTP must also be able taking care of simpler scenarios
+A NAT supporting SCTP must also be able taking care of simpler scenarios
 such as SCTP Clients behind a NAT wishing to create Associations towards the same remote peer,
-or even cases where multiple NAT exist.
+even cases where multiple NAT exist.
 The case where NAT implements port-forwarding also needs to be considered.
 
 The scenario called Multipoint Traversal is possibly the most complex when distributed
 SCTP Endpoint, this cannot be neglected in a SCTP NAT support solution.
 
-- What is key of the proposal
-The basic idea is that handling of the SCTP ports is to be kept at the SCTP Endpoint,
+- Cornerstones of the proposal
+The main requirement towards NAT is that handling of the SCTP ports is to be kept at the SCTP Endpoint,
 thus the NAT devices shall never change SCTP source or destination ports.
-The NAT devices will only need to inspect the SCTP Header of the SCTP packets, all Decisions
-at the NAT are taken based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
-VTAG is only inspected to check that it's equal to zero, as this means that the packet
+The NAT devices will only need to inspect the SCTP Header of the SCTP packets, all decisions
+are based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
+The reason VTAG is read is to check that it's equal to zero, as this means that the packet
 transports an INIT chunk.
-As a limitation, the proposal don't allow more than one Association to exist between the
-same SCTP Endpoints, according to RFC 4960.
 
 - Advantages towards natsupp draft version 22
 The proposed approach doesn't need the NAT devices to take care of VTAG handling.
