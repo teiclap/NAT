@@ -1,49 +1,56 @@
 draft-teiclap-tsvwg-natsupp.txt
 
 - Background
-The main reason behind the proposal is to solve the problems that are rising behind the introduction
-of nodes that adopt SCTP as transport protocol being implemented in a Cloud environment, mostly
-in containerized way, that exploit NAT for redundancy and scalability reasons.
-The implementation of an SCTP Endpoint in those environment is ditributed among SCTP Hosts
-that expose the same Port, and are seen from the network as a single entity.
-Often those distributed SCTP Endpoint are also multihomed.
+This proposal is an attempt to solve some of the issues raised in the review of the
+current draft-ietf-tsvwg-natsupp-22.
+It also deals with implementation of nodes that adopt SCTP as transport 
+protocol in a Cloud environment, mostly in containerized way, that exploit NAT for redundancy 
+and scalability reasons: the SCTP Endpoint in those environment is ditributed among SCTP Hosts
+that expose the same Port but from the network the SCTP Termination is seen as 
+belonging to a single host. Often those distributed SCTP Endpoints are multihomed.
 A typical example is the AMF node in 5G networks, related to the NG-C interface,
 (3GPP TS 38.412, TS 38.413), a similar case is the MME node in 4G network, related to the 
 S1-MME interface (3GPP TS 36.412, TS 36.413).
 
 A NAT supporting SCTP must also be able taking care of simpler scenarios
 such as SCTP Clients behind a NAT wishing to create Associations towards the same remote peer,
-even cases where multiple NAT exist.
+even cases where multiple NAT exist and/or a trasversal scenarios where independent NAT devices
+deal with the same Associations in single or multihomed cases.
 The case where NAT implements port-forwarding also needs to be considered.
 
 The scenario called Multipoint Traversal is possibly the most complex when distributed
 SCTP Endpoint, this cannot be neglected in a SCTP NAT support solution.
 
 - Cornerstones of the proposal
-The main requirement towards NAT is that handling of the SCTP ports is to be kept at the SCTP Endpoint,
-thus the NAT devices shall never change SCTP source or destination ports.
-The NAT devices will only need to inspect the SCTP Header of the SCTP packets, all decisions
+As in draft-ietf-tsvwg-natsupp-22, the main requirement towards NAT is that handling of 
+the SCTP ports is to be kept at the SCTP Endpoint, thus the NAT devices shall never change 
+SCTP source or destination ports. In case of collision, it's the source SCTP Endpoints
+that will take the decision about adopting a different source port.
+The NAT devices will only need to inspect the SCTP common Header of the SCTP packets, all decisions
 are based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
 The reason VTAG is read is to check that it's equal to zero, as this means that the packet
 transports an INIT chunk.
 
 - Advantages towards natsupp draft version 22
 The proposed approach doesn't need the NAT devices to take care of VTAG handling.
+The NAT device only needs local rules for creating a NAT Table entry as it doesn't 
+need to trace the Association establishment.
 The NAT table entries are only depending on a timer supervision, not on Association state.
 There's no need for synchronization among NAT devices, consistency of NAT Tables
-among different NAT devices is kept automatically even in cases like restarts.
-Since NAT doesn't parse SCTP packets, it will not suffer from SCTP evolutions or implementation
-interpreting reduced or extended features of SCTP.
+among different NAT devices is kept automatically even in cases of restarts.
+NAT doesn't parse SCTP packets, thus NAT behaviorn doesn't depend on SCTP.
 The NAT device doesn't need to send any SCTP packet to the SCTP Endpoints.
-The solution is mostly backwards compatible.
 Decisions at the SCTP Hosts are taken by means of interpreting the retransmissions and the timeouts,
 collisions are solved by the client by choosing a different port numbers rather than a different VTAG.
-Impacts on SCTP Endpoints are minor, limited to the handling of some Error cases.
 
 - Disadvantages towards natsupp draft version 22
 Handling of multiple Associations between the same SCTP Endpoints are not possible (this is not
-permitted by RFC 4960 though)
-Setup time for Associations in worst case takes longer, this can be improved in some ways.
+permitted by RFC 4960 though).
+The limit of number of Association between hosts is given by the port number, it's not possible
+from cleints behind NAT to establish more than 64k Associations towards the same remote SCTP Endpoint.
+Setup time for Associations in collision case takes longer.
+
+-----------------------------------------------------------------------------------------------
 
 - Scope of the proposal
 The scope of the proposal is the use of NAT in networks where SCTP clients and server are instantiated
