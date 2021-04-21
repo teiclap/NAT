@@ -3,68 +3,42 @@ draft-teiclap-tsvwg-natsupp.txt
 - Background
 This proposal is an attempt to solve some of the issues raised in the review of the
 current draft-ietf-tsvwg-natsupp-22.
-It also deals with implementation of nodes that adopt SCTP as transport 
-protocol in a Cloud environment, mostly in containerized way, that exploit NAT for redundancy 
-and scalability reasons: the SCTP Endpoint in those environment is ditributed among SCTP Hosts
-that expose the same Port but from the network the SCTP Termination is seen as 
-belonging to a single host. Often those distributed SCTP Endpoints are multihomed.
-A typical example is the AMF node in 5G networks, related to the NG-C interface,
-(3GPP TS 38.412, TS 38.413), a similar case is the MME node in 4G network, related to the 
-S1-MME interface (3GPP TS 36.412, TS 36.413).
+It also deals with implementation of nodes that adopt SCTP as transport protocol in a Cloud environment, mostly in containerized way, that exploit NAT for redundancy and scalability reasons: the SCTP Endpoint in those environment is ditributed among SCTP Hosts that expose the same Port but from the network the SCTP Termination is seen as belonging to a single host. Often those distributed SCTP Endpoints are multihomed.
+A typical example is the AMF node in 5G networks, related to the NG-C interface, (3GPP TS 38.412, TS 38.413), a similar case is the  MME node in 4G network, related to the S1-MME interface (3GPP TS 36.412, TS 36.413).
 
-A NAT supporting SCTP must also be able taking care of simpler scenarios
-such as SCTP Clients behind a NAT wishing to create Associations towards the same remote peer,
-even cases where multiple NAT exist and/or a trasversal scenarios where independent NAT devices
-deal with the same Associations in single or multihomed cases.
+A NAT supporting SCTP must also be able taking care of simpler scenarios such as SCTP Clients behind a NAT wishing to create Associations towards the same remote peer, even cases where multiple NAT exist and/or a trasversal scenarios where independent NAT devices deal with the same Associations in single or multihomed cases.
 The case where NAT implements port-forwarding also needs to be considered.
 
-The scenario called Multipoint Traversal is possibly the most complex when distributed
-SCTP Endpoint, this cannot be neglected in a SCTP NAT support solution.
+The scenario called Multipoint Traversal is possibly the most complex when distributed SCTP Endpoint, this cannot be neglected in a SCTP NAT support solution.
 
 - Cornerstones of the proposal
-As in draft-ietf-tsvwg-natsupp-22, the main requirement towards NAT is that handling of 
-the SCTP ports is to be kept at the SCTP Endpoint, thus the NAT devices shall never change 
-SCTP source or destination ports. In case of collision, it's the source SCTP Endpoints
-that will take the decision about adopting a different source port.
-The NAT devices will only need to inspect the SCTP common Header of the SCTP packets, all decisions
-are based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
-The reason VTAG is read is to check that it's equal to zero, as this means that the packet
-transports an INIT chunk.
+As in draft-ietf-tsvwg-natsupp-22, the main requirement towards NAT is that handling of the SCTP ports is to be kept at the SCTP Endpoint, thus the NAT devices shall never change SCTP source or destination ports. In case of collision, it's the source SCTP Endpoints that will take the decision about adopting a different source port.
+The NAT devices will only need to inspect the SCTP common Header of the SCTP packets, all decisions are based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
+The reason why VTAG is read is to check that it's equal to zero, as this means that the packet transports an INIT chunk.
 
 - Advantages towards natsupp draft version 22
 The proposed approach doesn't need the NAT devices to take care of VTAG handling.
-The NAT device only needs local rules for creating a NAT Table entry as it doesn't 
-need to trace the Association establishment.
+The NAT device only needs local rules for creating a NAT Table entry as it doesn't need to trace the Association establishment.
 The NAT table entries are only depending on a timer supervision, not on Association state.
-There's no need for synchronization among NAT devices, consistency of NAT Tables
-among different NAT devices is kept automatically even in cases of restarts.
+There's no need for synchronization among NAT devices, consistency of NAT Tables among different NAT devices is kept automatically even in cases of restarts.
 NAT doesn't parse SCTP packets, thus NAT behaviorn doesn't depend on SCTP.
 The NAT device doesn't need to send any SCTP packet to the SCTP Endpoints.
-Decisions at the SCTP Hosts are taken by means of interpreting the retransmissions and the timeouts,
-collisions are solved by the client by choosing a different port numbers rather than a different VTAG.
+Decisions at the SCTP Hosts are taken by means of interpreting the retransmissions and the timeouts, collisions are solved by the client by choosing a different port numbers rather than a different VTAG.
 
 - Disadvantages towards natsupp draft version 22
-Handling of multiple Associations between the same SCTP Endpoints are not possible (this is not
-permitted by RFC 4960 though).
-The limit of number of Association between hosts is given by the port number, it's not possible
-from cleints behind NAT to establish more than 64k Associations towards the same remote SCTP Endpoint.
+Handling of multiple Associations between the same SCTP Endpoints are not possible (this is not permitted by RFC 4960 On the same source and destination port pairs ).
+The limit of number of Association between hosts is given by the port number, it's not possible from cleints behind NAT to establish more than 64k Associations towards the same remote SCTP Endpoint.
 Setup time for Associations in collision case takes longer.
 
 -----------------------------------------------------------------------------------------------
 
 - Scope of the proposal
-The scope of the proposal is the use of NAT in networks where SCTP clients and server are instantiated
-with neither restrictions on the level of NAT hyerarchically or horizontally, nor on the adoption of multihoming.
-In the scoped scenarios, NAT can be used for hiding SCTP clients, servers and for implementation of Load Balancing
-in the sense that multiple SCTP servers are hidden and the choice of the one serving the client is decided
-by the NAT function implementing Load Balancing at Association Establishment time and kept for the Association Lifetime.
+The scope of the proposal is the use of NAT in networks where SCTP clients and server are instantiated with neither restrictions on the level of NAT hyerarchically or horizontally, nor on the adoption of multihoming.
+In the scoped scenarios, NAT can be used for hiding SCTP clients, servers and for implementation of Load Balancing in the sense that multiple SCTP servers are hidden and the choice of the one serving the client is decided by the NAT function implementing Load Balancing at Association Establishment time and kept for the Association Lifetime.
 
-The proposal doesn't require VTAG handling and the related avoidance/synchronization between server instances, 
-which the current proposal would require. 
-The NAT only does tracking individual paths, the egressing traffic creates return paths towards each instance
-avoids the need for VTAG handling.
-Tracking is thus handled by a single mechanism that is needed for all cases to deal with 
-multiple SCTP endpoints sending traffic towards the same remote address.
+The proposal doesn't require VTAG handling and the related avoidance/synchronization between server instances, which the current proposal would require. 
+The NAT only does tracking individual paths, the egressing traffic creates return paths towards each instance avoids the need for VTAG handling.
+Tracking is thus handled by a single mechanism that is needed for all cases to deal with multiple SCTP endpoints sending traffic towards the same remote address.
 
 
 The following basic scenarios are considered
@@ -161,32 +135,25 @@ Any complex scenario built with those such as:
                           +-------+
 
 
-In the example above clients C1, C2, C3, C4, C5 and servers S1 and S2 share the same external IP A,
-client C6 exploits the external IP B and server S3 is multihomed and exploits IP A and IP B.
-Server S4 exploits IP B as well.
+In the example above clients C1, C2, C3, C4, C5 and servers S1 and S2 share the same external IP A, client C6 exploits the external IP B and server S3 is multihomed and exploits IP A and IP B. Server S4 exploits IP B as well.
 
-Server S1 and S2 are seen as a single, distributed SCTP Endpoint, NAT LB does inspect Association
-requests and assignes the serving SCTP host based on a Load Sharing algorithm.
+Server S1 and S2 are seen as a single, distributed SCTP Endpoint, NAT LB does inspect Association requests and assignes the serving SCTP host based on a Load Sharing algorithm.
 
 ---------------------------------------------------------------------------------------------------------
 
-It's important to state that unless being part of a SCTP Distributed Endpoint, the port number used
-when defining the SCTP Ednpoints of a SCTP server behind a NAT need to be unique.
+It's important to state that unless being part of a SCTP Distributed Endpoint, the port number used when defining the SCTP Ednpoints of a SCTP server behind a NAT need to be unique.
 
 - What is kept from the draft natsupp v22
-Similar to what described in the current draft-ietf-tsvwg-natsupp there's the need of a cooperation
-between SCTP Hosts and NAT device in order to allow Association setup and traffic exchange.
-The NAT devices will take a lookup table that is meant to keep the state of the Association
-limited to what is needed in NAT.
+Similar to what described in the current draft-ietf-tsvwg-natsupp there's the need of a cooperation between SCTP Hosts and NAT device in order to allow Association setup and traffic exchange.
+The NAT devices will take a lookup table that is meant to keep the state of the Association limited to what is needed in NAT.
 NAT has a functions for searching the lookup table and take a decision based on the results.
 
-The SCTP Endpoint takes the responsibility to take decisions based on the feedbacks received
-from the network in order to setup the Association.
+The SCTP Endpoint takes the responsibility to take decisions based on the feedbacks received from the network in order to setup the Association.
 
-An Association is established towards the primary peer interface first, then the other paths
-that belong tp a multihomed association are added by means of ASCONF messages.
+An Association is established towards the primary peer interface first, then the other paths that belong tp a multihomed association are added by means of ASCONF messages.
 
 The following extensions are taken (Only needed for Optional Part)
+                                    -----------------------------
 
 Extended ERROR Chunk
 
@@ -209,27 +176,15 @@ Extended ERROR Chunk
 Proposal in details
 ----------------------------------------------------------------------------------------------
 
-The NAT functionality takes care of SCTP packets in EGRESS meaning that
-the SCTP packet is originated from an SCTP host that is located behind
-the NAT itself, as well as SCTP packets in INGRESS meaning that the SCTP
-packets are originated from the external network.
-NAT learns about Associations by inspecting the SCTP Header only, it has
-knowledge of [Source.IP:Source.Port;Dest.IP:Dest.Port]; a timer supervision
-exists at association level that removes the Association information from
-the NAT after a timer expires.
-NAT needs to recognize INIT chunks, this is achieved by looking at SCTP
-header since INIT must be transported in a SCTP packet with VTag=0.
-There's no Signaling between NAT and the SCTP host, rather SCTP host
-understants the NAT behavior as it will experience retransmission faults
-when the NAT device cannot forward the SCTP packets.
+The NAT functionality takes care of SCTP packets in EGRESS meaning that the SCTP packet is originated from an SCTP host that is located behind the NAT itself, as well as SCTP packets in INGRESS meaning that the SCTP packets are originated from the external network.
+NAT learns about Associations by inspecting the SCTP Header only, it has knowledge of [Source.IP:Source.Port;Dest.IP:Dest.Port]; a timer supervision exists at association level that removes the Association information from the NAT after a timer expires.
+NAT needs to recognize INIT chunks, this is achieved by looking at SCTP header since INIT must be transported in a SCTP packet with VTag=0.
+There's no Signaling between NAT and the SCTP host, rather SCTP host understants the NAT behavior as it will experience retransmission faults when the NAT device cannot forward the SCTP packets.
 
 In details, the implementation of what proposed in this paper allows:
-    * Client in NAT environment to establish multihomed associations
-        towards remote Servers
-    * Server in NAT environment to establish multihomed associations
-        from remote Clients
-    * Client or Server in NAT environment to establish multihomed
-        associations towards legacy RFC 4960 peers
+    * Client in NAT environment to establish multihomed associations towards remote Servers
+    * Server in NAT environment to establish multihomed associations from remote Clients
+    * Client or Server in NAT environment to establish multihomed associations towards legacy RFC 4960 peers
     * NAT devices to cope with multihomed SCTP traffic
     * NAT devices to cope with restart (with limitations)
 
@@ -245,32 +200,20 @@ Limits of the proposed paper are described below:
 NAT device SCTP specialization
 ==============================
 
-NAT need to implement NAT forwarding table for SCTP containing the information related
-to SCTP Association as well as the forwarding.
+NAT need to implement NAT forwarding table for SCTP containing the information related to SCTP Association as well as the forwarding.
 NATTableEntry ::= [Source.IP:Source.Port;Dest.IP:Dest.Port;fwd.IP;NATTimer]
 
-Since Distributed SCTP Endpoint is supported, there are NAT that have multiple
-choices for forwarding packets, i.e. there are multiple hosts having an SCTP
-Server at the same SCTP Port.
+Since Distributed SCTP Endpoint is supported, there are NAT that have multiple choices for forwarding packets, i.e. there are multiple hosts having an SCTP Server at the same SCTP Port.
 
 SCTP Parsing
 ------------
-In order to handle SCTP packets, NAT needs to discriminate packets
-containing an INIT chunk. This is achieved by checking the Destination VTag in
-the SCTP Header, because SCTP packets containing INIT chunk have VTag = 0.
+In order to handle SCTP packets, NAT needs to discriminate packets containing an INIT chunk. This is achieved by checking the Destination VTag in the SCTP Header, because SCTP packets containing INIT chunk have VTag = 0.
 
 Load Balancers
 --------------
-A Load Balancer is a node in the network that hides the instantiation of an
-SCTP Endpoint over a set of SCTP Hosts in a local network.
-The Load Balancer at INIT will select one SCTP Host for handling it,
-the traffic related to the resulting Association will be NATted towards
-the chosen host.
-When a INIT packet reaches a Load Balancer, there are multiple choices for the selected
-Dest.Address:Dest.Port, LB will select one of the SCTP Hosts that can be elected for
-terminating the Association. It's out of scope of this paper the description of a
-selection algorithm. Note that multiple choices only applies to LB devices when
-INIT arrives as INGRESS.
+A Load Balancer is a node in the network that hides the instantiation of an SCTP Endpoint over a set of SCTP Hosts in a local network.
+The Load Balancer at INIT will select one SCTP Host for handling it, the traffic related to the resulting Association will be NATted towards the chosen host.
+When a INIT packet reaches a Load Balancer, there are multiple choices for the selected Dest.Address:Dest.Port, LB will select one of the SCTP Hosts that can be elected for terminating the Association. It's out of scope of this paper the description of a selection algorithm. Note that multiple choices only applies to LB devices when INIT arrives as INGRESS.
 
 SCTP control functions
 ----------------------
@@ -369,137 +312,90 @@ INIT Chunk Parameters: (may appear in INIT, INIT-ACK and ASCONF)
 SCTP Endpoint behavior
 ======================
 An SCTP Endpoint receiving an OOTB packet will check:
-  - If it's an HB packet, whose 4-uple is consistent with an Association established at that Host
-    but VTags are not known, an ERROR signal "HB with Inconsistent VTag" will be sent back.
-  - If it's an ASCONF packet with "Address 0.0.0.0" and ERROR signal "ASCONF with Inconsistent VTag"
-    will be sent back.
-  - A legacy RFC 4960 SCTP Host on the other hand should send an ABORT, whilst implementations exist
-    that can be configured for silently discarding OOTB packets.
+  - If it's an HB packet, whose 4-uple is consistent with an Association established at that Host but VTags are not known, an ERROR signal "HB with Inconsistent VTag" will be sent back.
+  - If it's an ASCONF packet with "Address 0.0.0.0" and ERROR signal "ASCONF with Inconsistent VTag" will be sent back.
+  - A legacy RFC 4960 SCTP Host on the other hand should send an ABORT, whilst implementations exist that can be configured for silently discarding OOTB packets.
 
-An SCTP Endpoint receiving an ERROR Chunk with parameter "INIT cannot be forwarded" will
-    check whether it has been caused by an own INIT by verifying source and destination IP addresses,
-    ports and VTAG. In case it maps an own INIT Chunk, the SCTP Host will behave as in case of rtx timeout,
-    otherwise that chunk will be threated as an OOTB chunk.
+An SCTP Endpoint receiving an ERROR Chunk with parameter "INIT cannot be forwarded" will check whether it has been caused by an own INIT by verifying source and destination IP addresses, ports and VTAG. In case it maps an own INIT Chunk, the SCTP Host will behave as in case of rtx timeout, otherwise that chunk will be threated as an OOTB chunk.
 
-NAT and port forwarding: we are not considering port forwarding as a valid NAT case, an SCTP Host
-behind a NAT that does port forwarding for that SCTP Host is the same as exposing the SCTP Host
-directly on the external network, in this case there's no need to change what the NAT does.  
+NAT and port forwarding: we are not considering port forwarding as a valid NAT case, an SCTP Host behind a NAT that does port forwarding for that SCTP Host is the same as exposing the SCTP Host directly on the external network, in this case there's no need to change what the NAT does.  
 
-In the following description we assume that all NAT and Load Balancers implement the NAT behavior
-as described above. The remote SCTP Host on the other hand may implement legacy rfc4960, this is
-considered in the Use Case description.
+In the following description we assume that all NAT and Load Balancers implement the NAT behavior as described above. The remote SCTP Host on the other hand may implement legacy rfc4960, this is considered in the Use Case description.
 
 Use Cases:
 
 Client only cases:
 1. Single-homed vs single-homed
     Client sends INIT packet, if it does not succeed it will retry with a different Source.port number.
-    Reason why INIT/INIT-ACK doesn't succeed is assumed to be due to a congestion in any of the NAT
-    being part of the path between the SCTP Ednpoints.
+    Reason why INIT/INIT-ACK doesn't succeed is assumed to be due to a congestion in any of the NAT being part of the path between the SCTP Ednpoints.
 
 2. Single-homed vs multihomed (public IP addresses known to the multihomed peer)
     Client sends INIT packet, if it does not succeed it will retry with a different Source.port number.
-        INIT-ACK packet contains a new option that indicates the list of IP addresses is NOT CONFIRMED
+    INIT-ACK packet contains a new option that indicates the list of IP addresses is NOT CONFIRMED
 
     Since the set of remote IP addresses is not CONFIRMED, client will start probing with HB.
 
     According to NAT Behavior above, the peers can experience
       - HB-ACK : the IP address becomes CONFIRMED
       - rtx timeout : the sender keep on probing that path according to RFC 4960
-      - ERROR "HB with Inconsistent VTag" : the IP address used for HB is permanently unavailable
-        and the sender MAY try to probe it again after a certain time
-      - ABORT : after checking that the ABORT has been caused by HB by checking the Source.IP,
-        in case it's confirmed that ABORT has been caused by HB, the sender will threat it in the
-        same mode as an ERROR "HB with Inconsistent VTag".
+      - ERROR "HB with Inconsistent VTag" : the IP address used for HB is permanently unavailable and the sender MAY try to probe it again after a certain time
+      - ABORT : after checking that the ABORT has been caused by HB by checking the Source.IP, in case it's confirmed that ABORT has been caused by HB, the sender will threat it in the same mode as an ERROR "HB with Inconsistent VTag".
 
-    Note that, due to the network configuration, the multihomed Association resulting may not
-    be complete as a set of paths may be not possible to establish.
+    Note that, due to the network configuration, the multihomed Association resulting may not be complete as a set of paths may be not possible to establish.
 
 
 3. Multihomed vs multihomed (public IP addresses known to the multihomed peers)
     Client sends INIT packet, if it does not succeed it will retry with a different Source.port number.
-        INIT packet contains a new option that indicates the list of IP addresses is NOT CONFIRMED
-        INIT-ACK packet also contains a new option that indicates the list of IP addresses is NOT CONFIRMED
+        INIT packet contains a new option that indicates the list of IP addresses is NOT CONFIRMED.
+        INIT-ACK packet also contains a new option that indicates the list of IP addresses is NOT CONFIRMED.
 
     When succeeding, since the set of remote IP addresses is not CONFIRMED, client and server will start probing with HB.
 
     The behavior of the peers is the same as described above in case 2.
 
-    Note that, due to the network configuration, the multihomed Association resulting may not
-    be complete as a set of paths may be not possible to establish.
+    Same as case 2, multihomed Associations may not be completed.
 
 4. Multihomed vs multihomed (public IP addresses unknown to the multihomed peer)
    This case begins as the single-homed vs single-homed case until the Association is established.
 
-   The peers, independently, will start adding further IP addresses to the Association, one at a time,
-   since the public IP address is unknown, the SCTP Host only knows the local IP addresses it can use.
-   The SCTP Endpoint will use rfc6051, it will send an ASCONF signal with IP-address = 0.0.0.0 using
-   one of the internal IP address as source towards a CONFIRMED peer's IP address.
+   The peers, independently, will start adding further IP addresses to the Association, one at a time, since the public IP address is unknown, the SCTP Host only knows the local IP addresses it can use.
+   The SCTP Endpoint will use rfc6051, it will send an ASCONF signal with IP-address = 0.0.0.0 using one of the internal IP address as source towards a CONFIRMED peer's IP address.
 
      According to NAT Behavior above, the peers can experience
       - ASCONF-ACK : the IP address is added to the Association and path probing can start as in case 2.
       - rtx timeout : the IP address used for ASCONF is permanently unavaliable
-      - ERROR "ASCONF with Inconsistent VTag" : the IP address used for ASCONF is permanently unavaliable
-        and the sender MAY try to probe it again after a certain time
-      - ABORT : after checking that the ABORT has been caused by ASCONF by checking the Source.IP,
-        in case it's confirmed that ABORT has been caused by ASCONF, the sender will threat it in the
-        same mode as an ERROR "ASCONF with Inconsistent VTag".
+      - ERROR "ASCONF with Inconsistent VTag" : the IP address used for ASCONF is permanently unavaliable and the sender MAY try to probe it again after a certain time
+      - ABORT : after checking that the ABORT has been caused by ASCONF by checking the Source.IP, in case it's confirmed that ABORT has been caused by ASCONF, the sender will threat it in the same mode as an ERROR "ASCONF with Inconsistent VTag".
 
-    Note that, due to the network configuration, the multihomed Association resulting may not
-    be complete as a set of paths may be not possible to establish.
+    Same as case 2, multihomed Associations may not be completed.
 
 5. Server Endpoint vs Server Endpoint
-    This is a special case where both Endpoint have a fixed and well-known port number that MUST be used
-    as Source.port in the Association establishment.
-    In such case, only one host within a NAT zone can establish one Association towards another host in another NAT zone.
+    This is a special case where both Endpoint have a fixed and well-known port number that MUST be used as Source.port in the Association establishment. In such case, only one host within a NAT zone can establish one Association towards another host in another NAT zone.
 
-    The Endpoint acting as Client sends INIT packet, if not succeed it will not try again but inform the application
-    that it's not possible to establish an Association.
+    The Endpoint acting as Client sends INIT packet, if not succeed it will not try again but inform the application that it's not possible to establish an Association.
 
 6. NAT restart.
     If a NAT restarts, the NAT table is lost and the following events can occur:
     An existing association keeps on sending packets on the set of paths known by the peers.
-    According to the NAT rules, those SCTP packets will make NAT re-creating the proper NAT entries
-    from the EGRESS traffic perspective.
+    According to the NAT rules, those SCTP packets will make NAT re-creating the proper NAT entries from the EGRESS traffic perspective.
 
-    Race condition may happen when one sctp host will send an INIT packet that will arrive at the NAT before
-    a traffic packet can restore the NAT entry. In such case INIT has overwitten the NAT entry that was previously
-    used by the existing association.
-    We see this event as very rare to happen, and the reason for it is because NAT is a blocking mechanism that
-    doesn't provide full capacity. A multihomed configuration can help reducing the blocking probability.
+    Race condition may happen when one sctp host will send an INIT packet that will arrive at the NAT before a traffic packet can restore the NAT entry. In such case INIT has overwitten the NAT entry that was previously used by the existing association.
+    We see this event as very rare to happen, and the reason for it is because NAT is a blocking mechanism that doesn't provide full capacity. A multihomed configuration can help reducing the blocking probability.
 
-    The race condition can be partially solved if the NAT waits for a time long enough to cope with all the
-    associations data or HB transmissions. After that time it can be assumed that all the Associations
-    using that NAT will have rebuilt the related entries in the NATTable.
+    The race condition can be partially solved if the NAT waits for a time long enough to cope with all the associations data or HB transmissions. After that time it can be assumed that all the Associations using that NAT will have rebuilt the related entries in the NATTable.
     The solution would not handle INIT chunks during that observation time, after that INIT chunks can be handled.
 
 6. Timing considerations
-    SCTP exploits internal retransmission timers for detecting how NAT devices on the paths are acting
-    and uses timeouts in order to take decisions on how to setup the multihomed association.
-    Here, the shorter the timers the quicker the setup procedure, still assuming that the initial setup
-    can go into collision a number of times it may take a significant time to setup associations.
-    RFC 4960 provides a set of recommended values to be used for timers and retransmission attempts,
-    the adoption of those timers would need to be reconsidered in the scope of the current paper.
+    SCTP exploits internal retransmission timers for detecting how NAT devices on the paths are acting and uses timeouts in order to take decisions on how to setup the multihomed association. Here, the shorter the timers the quicker the setup procedure, still assuming that the initial setup can go into collision a number of times it may take a significant time to setup associations. RFC 4960 provides a set of recommended values to be used for timers and retransmission attempts, the adoption of those timers would need to be reconsidered in the scope of the current paper.
 
-    The current paper has a simple state machine at the NAT devices based on a supervision timer,
-    this is possible because SCTP sends traffic over all the paths at least at HB timing rate for path
-    probing. Every time an SCTP Packet is forwarded, NATTimer is restarted.
-    The choice of NATTimer value SHOULD ensure that there are no rtx timeouts due to NATTimer expiration,
-    in fact NATTimer needs to cope with the slowest traffic case that is path probing, is then recommended
-    that NATTimer is larger than 2 times HB timer, but at the same time NATTimer must release a path as soon
-    as it's not being used by an active Association, this would suggest a value that is as short as possible.
+    The current paper has a simple state machine at the NAT devices based on a supervision timer, this is possible because SCTP sends traffic over all the paths at least at HB timing rate for path probing. Every time an SCTP Packet is forwarded, NATTimer is restarted.
+    The choice of NATTimer value SHOULD ensure that there are no rtx timeouts due to NATTimer expiration, in fact NATTimer needs to cope with the slowest traffic case that is path probing, is then recommended that NATTimer is larger than 2 times HB timer, but at the same time NATTimer must release a path as soon as it's not being used by an active Association, this would suggest a value that is as short as possible.
     A good compromise seems to be 2 * HB timer < NATTimer < 2 * HB timer.
 
-7. Association setup improvement
-    It is possible to improve the setup time for an association if NAT device could help SCTP host
-    to take a quick decision in case of collision.
-    This feature is optional and MAY be implemented at the NAT device, whilst handling is mandatory at the
-    SCTP host.
-    When a NAT device will receive an INIT chunk, it will check whether it can be forwarded by inspecting
-    the NAT lookup table. If it cannot be forwarded, it MAY send an SCTP Packet containing an ERROR Chunk
-    with parameter "INIT cannot be forwarded". Since no association exists yet, and because VTAG=0 cannot
-    be used, the NAT device need to parse the received INIT chunk and retrieve the Initiate Tag that will be
-    used as VTAG.
+7. Association setup improvement (Optional)
+    It is possible to improve the setup time for an association if NAT device could help SCTP host to take a quick decision in case of collision.
+    This feature is optional and MAY be implemented at the NAT device, whilst handling is mandatory at the SCTP host.
+    When a NAT device will receive an INIT chunk, it will check whether it can be forwarded by inspecting the NAT lookup table. If it cannot be forwarded, it MAY send an SCTP Packet containing an ERROR Chunk with parameter "INIT cannot be forwarded". Since no association exists yet, and because VTAG=0 cannot be used, the NAT device need to parse the received INIT chunk and retrieve the Initiate Tag that will be used as VTAG.
 
 
 
