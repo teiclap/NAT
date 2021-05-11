@@ -363,8 +363,8 @@ of Internal-Port, Remote-Port, Internal-Address, Remote-Address.
 An entry in that NAT binding table is called a NAT-State control block.
 The function Create() obtains the just mentioned parameters and returns
 a NAT-State control block. Create() instantiates a supervision timer on
-the NAT-State control block that has duration 2 * HB.interval < timer < 4 * HB.interval 
-(see section 15 of <xref target='RFC4960'/>).
+the NAT-State control block that has duration greather than 2 * HB.interval
+and lower than 4 * HB.interval (see section 15 of <xref target='RFC4960'/>).
 A NAT function MAY allow creating NAT-State control blocks via a management
 interface.</t>
 
