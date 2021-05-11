@@ -61,6 +61,20 @@ Stream Control Transmission Protocol (SCTP) Network Address Translation Support
     </address>
 </author>
 
+       <!-- *************** IRENE RUENGELER ***************** -->
+       <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
+              <organization abbrev='Ericsson AB'>
+                  Ericsson AB</organization>
+              <address>
+                     <postal>
+                            <street>Torshamnsgatan 21</street>
+                            <city>16440 Stockholm</city>
+                            <country>SE</country>
+                     </postal>
+                     <email>claudio.porfiri@ericsson.com</email>
+              </address>
+       </author>
+
 <date/>
 
 <keyword>Internet-Draft</keyword>
