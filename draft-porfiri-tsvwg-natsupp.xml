@@ -204,7 +204,8 @@ Internal-Address.</t></dd>
 <xref target='RFC4960'/>) that the internal host has chosen for an
 association.
 The VTag is a unique 32-bit tag that accompanies any incoming SCTP packet
-for this association to the Internal-Address.</t></dd>
+for this association to the Internal-Address. When SCTP packet contains an
+INIT chunk VTag is set to zero.</t></dd>
 <dt>Remote-Address (Rem-Addr)</dt>
 <dd><t>The address that an internal host is attempting to contact.</t></dd>
 <dt>Remote-Port (Rem-Port)</dt>
@@ -213,7 +214,8 @@ for this association to the Internal-Address.</t></dd>
 <dd><t>The Verification Tag (VTag) (see Section 3.1 of <xref target='RFC4960'/>)
 that the host holding the Remote-Address has chosen for an association.
 The VTag is a unique 32-bit tag that accompanies any outgoing
-SCTP packet for this association to the Remote-Address.</t></dd>
+SCTP packet for this association to the Remote-Address. When SCTP packet contains an
+INIT chunk VTag is set to zero.</t></dd>
 <dt>External-Address (Ext-Addr)</dt>
 <dd><t>An external address assigned to the NAT function, that it uses as a source
 address when sending packets towards a Remote-Address.</t></dd>
@@ -288,7 +290,7 @@ in this case sees all the packets of the SCTP association.</t>
 
 </section>
 
-<section>
+<section anchor='multi_point_traversal'>
 <name>Multipoint Traversal</name>
 <t>This case involves multiple NAT functions and each NAT function only sees some
 of the packets in the SCTP association.
@@ -346,8 +348,10 @@ Therefore an SCTP variant of NAT function has been developed
 <name>The SCTP-Specific Variant of NAT</name>
 <t>In this section it is allowed that there are multiple SCTP capable hosts
 behind a NAT function that share one External-Address.
-Furthermore, this section focuses on the single point traversal scenario
-(see <xref target='single_point_traversal'/>).</t>
+This section focuses on the single point traversal scenario
+(see <xref target='single_point_traversal'/>) as well as on the multipoint
+trasversal NAT (see <xref target='multi_point_traversal'/>).
+</t>
 
 <t>The modification of outgoing SCTP packets sent from an internal host is
 simple: the source address of the packets has to be replaced with the
@@ -355,8 +359,7 @@ External-Address. It might also be necessary to establish some
 state in the NAT function to later handle incoming packets.</t>
 
 <t>Typically, the NAT function has to maintain a NAT binding table
-of Internal-VTag, Internal-Port, Remote-VTag, Remote-Port, Internal-Address,
-and whether the restart procedure is disabled or not.
+of Internal-Port, Remote-Port, Internal-Address.
 An entry in that NAT binding table is called a NAT-State control block.
 The function Create() obtains the just mentioned parameters and returns
 a NAT-State control block.
@@ -367,19 +370,12 @@ interface.</t>
 destination address of the packets has to be replaced with the Internal-Address
 of the host to which the packet has to be delivered, if a NAT state entry is
 found.
-The lookup of the Internal-Address is based on the Remote-VTag, Remote-Port,
-Internal-VTag and the Internal-Port.</t>
+The lookup of the Internal-Address is based on the Remote-Port and the Internal-Port.</t>
 
 <t>The entries in the NAT binding table need to fulfill some uniqueness
 conditions.
 There can not be more than one entry NAT binding table with the same pair of
-Internal-Port and Remote-Port.
-This rule can be relaxed, if all NAT binding table entries with the same
-Internal-Port and Remote-Port have the support for the restart
-procedure disabled (see <xref target='disrestart'/>).
-In this case there can not be no more than one entry with the same Internal-Port,
-Remote-Port and Remote-VTag and no more than one NAT binding table entry with
-the same Internal-Port, Remote-Port, and Int-VTag.</t>
+Internal-Port and Remote-Port.</t>
 
 <t>The processing of outgoing SCTP packets containing an INIT chunk
 is illustrated in the following figure. This scenario is valid for all
