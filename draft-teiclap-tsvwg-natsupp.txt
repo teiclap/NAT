@@ -7,12 +7,13 @@ It also deals with implementation of nodes that adopt SCTP as transport protocol
 A typical example is the AMF node in 5G networks, related to the NG-C interface, (3GPP TS 38.412, TS 38.413), a similar case is the  MME node in 4G network, related to the S1-MME interface (3GPP TS 36.412, TS 36.413).
 
 A NAT supporting SCTP must also be able taking care of simpler scenarios such as SCTP Clients behind a NAT wishing to create Associations towards the same remote peer, even cases where multiple NAT exist and/or a traversal scenarios where independent NAT devices deal with the same Associations in single or multihomed cases.
-The case where NAT implements port-forwarding also needs to be considered.
+The case where NAT implements manual configuration of NAT-table entries also needs to be considered.
 
 The scenario called Multipoint Traversal is possibly the most complex when distributed SCTP Endpoint, this cannot be neglected in a SCTP NAT support solution.
 
 - Cornerstones of the proposal
-As in draft-ietf-tsvwg-natsupp-22, the main requirement towards NAT is that handling of the SCTP ports is to be kept at the SCTP Endpoint, thus the NAT devices shall never change SCTP source or destination ports. In case of collision, it's the source SCTP Endpoints that will take the decision about adopting a different source port.
+As in draft-ietf-tsvwg-natsupp-22, the main requirement towards NAT is that handling of the SCTP ports is to be kept at the SCTP Endpoint, thus the NAT devices shall never change SCTP source or destination ports. 
+In case of collision, it's the SCTP User that will take the decision about adopting a different source port (i.e. a different SCTP Endpoint).
 The NAT devices will only need to inspect the SCTP common Header of the SCTP packets, all decisions are based on [Source-IP:Source:Port;Destination-IP:Destination-Port] and VTAG.
 The reason why VTAG is read is to check that it's equal to zero, as this means that the packet transports an INIT chunk.
 
@@ -20,10 +21,10 @@ The reason why VTAG is read is to check that it's equal to zero, as this means t
 The proposed approach doesn't need the NAT devices to take care of VTAG handling.
 The NAT device only needs local rules for creating a NAT Table entry as it doesn't need to trace the Association establishment.
 The NAT table entries are only depending on a timer supervision, not on Association state.
-There's no need for synchronization among NAT devices, consistency of NAT Tables among different NAT devices is kept automatically even in cases of restarts.
-NAT doesn't parse SCTP packets, thus NAT behavior doesn't depend on SCTP.
+Consistency of NAT Tables among different NAT devices is kept automatically even in cases of restarts.
+NAT doesn't parse SCTP packets, it inspects the SCTP Common Header only.
 The NAT device doesn't need to send any SCTP packet to the SCTP Endpoints.
-Decisions at the SCTP Hosts are taken by means of interpreting the retransmissions and the timeouts, collisions are solved by the client by choosing a different port numbers rather than a different VTAG.
+Collisions are solved by the SCTP User by choosing a different port numbers (SCTP Endpoint).
 
 - Disadvantages towards natsupp draft version 22
 Handling of multiple Associations between the same SCTP Endpoints are not possible (this is not permitted by RFC 4960 On the same source and destination port pairs ).
@@ -35,6 +36,10 @@ Setup time for Associations in collision case takes longer.
 - Scope of the proposal
 The scope of the proposal is the use of NAT in networks where SCTP clients and server are instantiated with neither restrictions on the level of NAT hierarchically or horizontally, nor on the adoption of multihoming.
 In the scoped scenarios, NAT can be used for hiding SCTP clients, servers and for implementation of Load Balancing in the sense that multiple SCTP servers are hidden and the choice of the one serving the client is decided by the NAT function implementing Load Balancing at Association Establishment time and kept for the Association Lifetime.
+
+A Load Balancer is an helper funcion when multiple Server hosts are hidden behind a NAT. It gives a single point of contact for the remote clients, as the actual traffic is managed by multiple other nodes.
+When a LB exists for balancing the incoming Association requests from remote peers, it receives the packets containing the INIT chunks to its IP address. LB decides which SCTP Host will reply, thus it will forward the packet to that host. Then the actual end-point would send back an INIT-ACK with a specific parameter indicating the this INIT-ACK belongs to the INIT which was sent to the address of the load balancer, but that particular address will not be used anymore. This way the load balancer is not involver in the actual communication anymore.
+In most cases, such as in Kubernetes Networking, LB is integrated with NAT, so that they share the same public IP address and the LB is only informed when a request cannot be satisfied by the existing rules in the NAT-table. In such cases, when LB has decided the NAT-tables will be updated so that the actual end-point will keep on using the same public IP address. 
 
 The proposal doesn't require VTAG handling and the related avoidance/synchronization between server instances, which the current proposal would require. 
 The NAT only does tracking individual paths, the egressing traffic creates return paths towards each instance avoids the need for VTAG handling.
@@ -61,11 +66,13 @@ Where SCTP Hosts implementing SCTP Endpoints S1,S2,S3 behave as servers, single-
 
 3)
                           +-------+
-[SCTP server S1]----------+       |
-[SCTP server S1]----------+  LB   +-----
+[SCTP server S1]----------+  LB   |
+[SCTP server S1]----------+  NAT  +-----
 [SCTP server S1]----------+       |     
                           +-------+    
-Where SCTP Hosts implementing a distributed SCTP Endpoint S1, behaving as a server, single-homed
+Where SCTP Hosts implementing a distributed SCTP Endpoint S1, behaving as a server, single-homed.
+Load Balancer LB is a function that takes the decision on which SCTP Host will take care of an incoming Association Request.
+Note that it's not possible from the network to decide which SCTP Host will take care of an INIT request when a distributed SCTP Endpoint exists, on the other hand whenever more than one SCTP Host acting as a Server exploits the same port number in the SCTP Endpoint and are located behind the same NAT, there's no way at SCTP level to choose among them. 
 
 4)
 
@@ -98,17 +105,17 @@ Where SCTP Hosts implementing SCTP Endpoints S1,S2 behave as servers, multi-home
 
 6)
 +--------------+          +-------+
-|              +          |       |
-|SCTP server S1+----------+  LB   +-----
+|              +          |  LB   |
+|SCTP server S1+----------+  NAT  +-----
 |              +----+  +--+       |
 +--------------+    |  |  +-------+
                     |  |
 +--------------+    |  |  +-------+
-|              +--- |--+  |       |
-|SCTP server S1|    +-----+  LB   +-----
+|              +--- |--+  |  LB   |
+|SCTP server S1|    +-----+  NAT  +-----
 |              +----------+       |
 +--------------+          +-------+     
-Where SCTP Hosts implementing a distributed SCTP Endpoint S1, behaving as a server, multi-homed
+Where SCTP Hosts implementing a distributed SCTP Endpoint S1, behaving as a server, multi-homed.
 
 7) 
 Any complex scenario built with those such as:
@@ -141,7 +148,7 @@ Server S1 and S2 are seen as a single, distributed SCTP Endpoint, NAT LB does in
 
 ---------------------------------------------------------------------------------------------------------
 
-It's important to state that unless being part of a SCTP Distributed Endpoint, the port number used when defining the SCTP Endpoints of a SCTP server behind a NAT need to be unique.
+It's important to state that unless being part of a SCTP Distributed Endpoint, the port number used when defining the SCTP Endpoints of a SCTP Server behind a NAT need to be unique. This because whenever two or more SCTP endpoint will choose the same port number, it will be impossible from a remote peer to be sure that the Association will be established towards the desired SCTP Host.
 
 - What is kept from the draft natsupp v22
 Similar to what described in the current draft-ietf-tsvwg-natsupp there's the need of a cooperation between SCTP Hosts and NAT device in order to allow Association setup and traffic exchange.
@@ -187,6 +194,7 @@ In details, the implementation of what proposed in this paper allows:
     * Client or Server in NAT environment to establish multihomed associations towards legacy RFC 4960 peers
     * NAT devices to cope with multihomed SCTP traffic
     * NAT devices to cope with restart (with limitations)
+    * SCTP Endpoints can be distributed among SCTP Hosts acting as Servers
 
 Limits of the proposed paper are described below:
     * Network Address and Port Translation (NAPT) is not supported.
@@ -242,18 +250,34 @@ void sendINITError(Source.IP,Source.port,Dest.IP,Dest.port)
     sends an ERROR Chunk towards Source.IP,Source.port with parameter "INIT cannot be forwarded"
 
 
-Meta-code of the NAT behavior
+NAT behavior
+============
+1. When an INIT packet arrives from a remote peer, it will be checked is an entry for the 4-uple exists, in this case it means that an Association with the same 4-uple is active and the INIT conflicts with that. The INIT packet will be discarded. The remote peer will keep on trying until local rules for trying expire. It's up to the remote SCTP user to decide if trying with a different source SCTP endpoint or to give up. If not NAT-Table entry exists and the local SCTP endpoint is not distributed, a new Entry is added to the NAT-table and the INIT packet is forwarded.
+2. If INIT packet arrives, and the destination is a distributed endpoint, a Load Balancer function will be triggered. LB will decide which SCTP Host will take care of the INIT, NAT-tables will be updated accordingly.
+3. When an SCTP packet other than INIT arrives from a remote peer, it will be checked if an entry for its 4-uple exists. If the 4-uple exists the packet is forwarded, otherwise it's silently discarded.
+4. When an INIT packet arrives from a local peer, it will be checked is an entry for the 4-uple exists, in this case it means that an Association with the same 4-uple is active and the INIT conflicts with that. The INIT packet will be discarded. The remote peer will keep on trying until local rules for trying expire. It's up to the remote SCTP user to decide if trying with a different source SCTP endpoint or to give up. If not NAT-Table entry exists and the local SCTP endpoint is not distributed, a new Entry is added to the NAT-table and the INIT packet is forwarded.
+5. When an SCTP packet other than INIT arrives from a local peer, it will be checked if an entry for its 4-uple exists. If the 4-uple exists the packet is forwarded, otherwise a new entry is created for it in the NAT-table and the packet is forwarded.
+6. At the creation of a new entry in the NAT-table, a NATtimer is created with duration greater than twice HB.interval according to RFC 4960.
+7. When a SCTP packet is forwarded, the NATTimer is restarted.
+8. When NATTimer expires for a certain NAT-table entry, the entry will be removed from NAT-table.
+9. At startup time, NAT will handle INIT chunks after the other SCTP packets, the delay is greater than twice HB.interval according to RFC 4960.
+
+There is a race condition in NAT due to NATTimer, as this timer is independently from the related association's lifetime, it will survive a time that is longer than the association itself. If a new INIT association will try to be established whilst NATTimer is still active, NAT will reuse the same resources as the previous Association. This is not a problem unless a distributed endpoint scenario is involved where traversal network involve independent NATs on different paths of a multihomed Association. This may create a situation where an SCTP packet is targeting the wrong SCTP Hosts that will behave according to OOTB rules as specified in RFC 4960.
+
+The following is Meta-code of the NAT behavior, it also includes the Load Balancer behavior when combined LB+NAT.
+ 
 
 INGRESS Packets :
     if pkt==INIT
         if lookupNAT(Source.IP,Source.port,Dest.IP,Dest.port)  
             // This is congestion case, since multiple associations between the
             // same SCTP Endpoints are not supported, the packet is discarded
+            // SCTP Client will retry until rules for retransmissions expire.
             discardPacket(Source.IP,Source.port,Dest.IP,Dest.port);
             *** OPTIONAL sendINITError(Source.IP,Source.port,Dest.IP,Dest.port); ***
         else
             if MultipleDestination(Dest.Port)
-                // This case applies only on Load Balancers and only with INGRESS                
+                // This case only applies when a Load Balancer exists in the case with Distributed SCTP endpoints
                 // Here LB solves the distributed Endpoint
                 Choose a local Host according to the Load Balancer Rules 
                 // -----------------------------------------------------
@@ -284,16 +308,17 @@ EGRESS Packets :
 NATTimer Expiration :
     destroyNAT(Source.IP,Source.port,Dest.IP,Dest.port);
 
+At NAT Restart : SCTP packet handling will start immediately, but processing INIT chunks will wait a Tstart timer that is greater than twice the HB.interval time defined according to RFC 4960 section 15. 
 
 NAT behavior with SCTP packets
 ------------------------------
     In a NAT where the HB packets are EGRESS, according to NAT behavior they can be:
-        discarded - in such case the sender will experience rtx timeout
+        discarded - in such case the sender will experience rtx timeouts
         forwarded to the right SCTP host - in this case the peer will reply with proper SCTP Chunk
         forwarded to the wrong SCTP host - in this case the wrong host will see an OOTB packet.
 
     In a NAT where the HB packets are INGRESS, according to NAT behavior they can be:
-        discarded - in such case the sender will experience rtx timeout
+        discarded - in such case the sender will experience rtx timeouts
         forwarded to the right SCTP host - in this case the peer will reply with proper SCTP Chunk
         forwarded to the wrong SCTP host - in this case the wrong host will see an OOTB packet
 
