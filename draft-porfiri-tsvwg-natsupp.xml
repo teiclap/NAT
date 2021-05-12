@@ -518,28 +518,6 @@ It returns the corresponding entry of the NAT binding table.
 <t>In the case where the Lookup function fails because it does not find an
 entry, the SCTP packet is dropped.</t>
 
-<t>The processing of incoming SCTP packets containing an ABORT or
-SHUTDOWN COMPLETE chunk with the T bit set is illustrated in the
-following figure.</t>
-<artwork align="center">
-<![CDATA[
-                                       /--\/--\
-+--------+          +-----+           /        \           +--------+
-| Host A | <------> | NAT | <------> | Network  | <------> | Host B |
-+--------+          +-----+           \         /          +--------+
-                                       \--/\---/
-
-                          Ext-Addr:Int-Port <------ Rem-Addr:Rem-Port
-                                            Rem-VTag
-
-         Lookup(*, Int-Port, Rem-VTag, Rem-Port)
-
-         Returns(NAT-State control block containing Int-Addr)
-
- Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
-                   Rem-VTag
-]]>
-</artwork>
 </section>
 </section>
 
