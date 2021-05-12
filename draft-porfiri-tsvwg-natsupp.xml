@@ -611,7 +611,26 @@ being sent then the bytes that do not fit are truncated.</t></dd>
 <name>New Parameters</name>
 <t>This section defines new parameters and their valid appearance
 defined by this document.</t>
-
+<section anchor='repetita_juvant'>
+       <name>Repetita Juvant Parameter</name>
+<t>This parameter is used to indicate that INIT chunk is the repetition
+of an already sent one even if it comes from a different source address.
+It's used from either peers before sending ASCONF in order to setup the
+NATs in the path.
+This parameter holds the Internal as well as the Remote verification Tags
+that will be used by the remote peer for validation.
+</t>
+<artwork align="left">
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Type = 0xXXXX         |         Length = 12           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                   Internal Verification Tag                   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                    Remote Verification Tag                    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</artwork>
 </section>
 </section>
 
