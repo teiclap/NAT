@@ -381,6 +381,14 @@ conditions.
 There can not be more than one entry NAT binding table with the same 4-uple of
 Internal-Address, Remote-Address, Internal-Port and Remote-Port.</t>
 
+<t>
+NAT is able understanding that the SCTP packet transports an INIT chunk because
+the SCTP common header will have VTAG=0 (see section 3.1 of <xref target='RFC4960'/>). 
+NAT needs to parse the SCTP packet only
+in case of collision in NAT binding table, in such case it will read the Int-VTag
+from the INIT chunk (see section 3.3.2 of <xref target='RFC4960'/>).
+</t>
+
 <t>The processing of outgoing SCTP packets containing an INIT chunk
 is illustrated in the following figure. This scenario is valid for all
 message flows in this section.</t>
@@ -446,12 +454,47 @@ Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                                            Rem-VTag
 ]]>
 </artwork>
+
+<t>The processing of incoming SCTP packets containing an INIT chunk
+is illustrated in the following figure. This scenario is valid for all
+message flows in this section.</t>
+
+       <artwork align="center">
+              <![CDATA[
+                                       /--\/--\
++--------+          +-----+           /        \           +--------+
+| Host A | <------> | NAT | <------> | Network  | <------> | Host B |
++--------+          +-----+           \         /          +--------+
+                                       \--/\---/
+
+
+                                         INIT [Initiate-Tag]
+                            Ext-Addr:Int-Port <---- Rem-Addr:Rem-Port
+                                             Int-VTag=0
+
+
+              if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+                     sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
+              else       
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
+                     Returns(control block)
+                     forwardPkt(Rem-Addr, Rem-Port, Int-Addr, Int-Port)
+
+
+           Translates To:
+
+                        INIT[Initiate-Tag]
+           Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
+                            Int-VTag=0
+           
+]]>
+       </artwork>
+
 <t>The processing of incoming SCTP packets containing chunk different
 than INIT is illustrated in the following figure.
 The Lookup() function has as input the Remote-Address,
 Remote-Port and the Internal-Port.
-It returns the corresponding entry of the NAT binding table and restarts
-the supervision timer.
+It returns the corresponding entry of the NAT binding table.
 </t>
 <artwork align="center">
 <![CDATA[
@@ -461,15 +504,13 @@ the supervision timer.
 +--------+          +-----+           \         /          +--------+
                                        \--/\---/
 
-                                         INIT ACK[Initiate-Tag]
                             Ext-Addr:Int-Port <---- Rem-Addr:Rem-Port
                                              Int-VTag
 
-         Lookup(Int-Port, Rem-Addr, Rem-Port)
+              if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+                     Returns(NAT-State control block containing Int-Addr)                  
+                     forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
-         Returns(NAT-State control block containing Int-Addr)
-
-               INIT ACK[Initiate-Tag]
  Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
                    Int-VTag
 ]]>
@@ -497,35 +538,6 @@ following figure.</t>
 
  Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
                    Rem-VTag
-]]>
-</artwork>
-<t>For an incoming packet containing an INIT chunk a table lookup is made
-only based on the addresses and port numbers.
-If an entry with a Remote-VTag of zero is found, it is considered a
-match and the Remote-VTag is updated.
-If an entry with a non-matching Remote-VTag is found or no entry is found,
-the incoming packet is silently dropped. If an entry with a matching Remote-VTag
-is found, the incoming packet is forwarded.
-This allows the handling of INIT collision through NAT functions.</t>
-<t>The processing of other incoming SCTP packets is described in the
-following figure.</t>
-<artwork align="center">
-<![CDATA[
-                                       /--\/--\
-+--------+          +-----+           /        \           +--------+
-| Host A | <------> | NAT | <------> | Network  | <------> | Host B |
-+--------+          +-----+           \         /          +--------+
-                                       \--/\---/
-
-                          Ext-Addr:Int-Port <------ Rem-Addr:Rem-Port
-                                            Int-VTag
-
-         Lookup(Int-VTag, Int-Port, *, Rem-Port)
-
-         Returns(NAT-State control block containing Internal-Address)
-
- Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
-                   Int-VTag
 ]]>
 </artwork>
 </section>
