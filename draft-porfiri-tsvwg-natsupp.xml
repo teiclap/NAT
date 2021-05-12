@@ -397,9 +397,14 @@ message flows in this section.</t>
  Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                   Rem-VTag=0
 
-              Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
-              Returns(control block)
-  
+              if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+                     sendAbort(Rem-Addr, Rem-Port, Int-Addr, Int-Port, M-bit)
+              else       
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
+                     Returns(control block)
+                     forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
+
+
            Translates To:
 
                         INIT[Initiate-Tag]
@@ -417,7 +422,7 @@ originated the packet with the M bit set and 'Port Number Collision'
 error cause (see <xref target='mbitabort'/> for the format).
 The source address of the packet containing the ABORT chunk MUST be the
 destination address of the packet containing the INIT chunk.</t>
-<t>The processing of outgoing SCTP packets containing no INIT chunks
+<t>The processing of outgoing SCTP packets containing chunks other than INIT
 is described in the following figure.</t>
 <artwork align="center">
 <![CDATA[
@@ -430,8 +435,12 @@ is described in the following figure.</t>
 Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                   Rem-VTag
 
+              if lookup(Int-Port, Rem-Port, Rem-Addr) == false
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
+                     Returns(control block)                  
+              forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
-                          Translate To:
+              Translates To:
 
                           Ext-Addr:Int-Port ------> Rem-Addr:Rem-Port
                                            Rem-VTag
