@@ -576,65 +576,6 @@ by a middle box.</t>
 <name>New Error Causes</name>
 <t>This section defines the new error causes added by this document.</t>
 
-<section anchor='port_coll'>
-<name>Port Number Collision Error Cause</name>
-<artwork align="left">
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Cause Code = 0x00B0        |     Cause Length = Variable   |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-\                             Chunk                            /
-/                                                              \
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</artwork>
-<dl newline="true">
-<dt>Cause Code: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the IANA defined cause code for the
-'VTag and Port Number Collision' Error Cause.
-IANA is requested to assign the value 0x00B0 for this cause code.</t></dd>
-<dt>Cause Length: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the length in bytes of the error cause.
-The value MUST be the length of the Cause-Specific Information plus 4.</t></dd>
-<dt>Chunk: variable length</dt>
-<dd><t>The Cause-Specific Information is filled with the chunk that caused this
-error.
-This can be an INIT, INIT ACK, or ASCONF chunk.
-Note that if the entire chunk will not fit in the ERROR chunk or ABORT chunk
-being sent then the bytes that do not fit are truncated.</t></dd>
-</dl>
-<t>[NOTE to RFC-Editor: Assignment of cause code to be confirmed by IANA.]</t>
-</section>
-
-<section anchor='miss_state'>
-<name>Missing State Error Cause</name>
-<artwork align="left">
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|    Cause Code = 0x00B1        |     Cause Length = Variable   |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-\                       Original Packet                        /
-/                                                              \
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</artwork>
-<dl newline="true">
-<dt>Cause Code: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the IANA defined cause code for the
-'Missing State' Error Cause.
-IANA is requested to assign the value 0x00B1 for this cause code.</t></dd>
-<dt>Cause Length: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the length in bytes of the error cause.
-The value MUST be the length of the Cause-Specific Information plus 4.</t></dd>
-<dt>Original Packet: variable length</dt>
-<dd><t>The Cause-Specific Information is filled with the IPv4 or IPv6 packet that
-caused this error. The IPv4 or IPv6 header MUST be included.
-Note that if the packet will not fit in the ERROR chunk or ABORT chunk
-being sent then the bytes that do not fit are truncated.</t></dd>
-</dl>
-<t>[NOTE to RFC-Editor: Assignment of cause code to be confirmed by IANA.]</t>
-</section>
-
 <section anchor='portcollide'>
 <name>Port Number Collision Error Cause</name>
 <artwork align="left">
@@ -670,80 +611,7 @@ being sent then the bytes that do not fit are truncated.</t></dd>
 <name>New Parameters</name>
 <t>This section defines new parameters and their valid appearance
 defined by this document.</t>
-<section anchor='disrestart'>
-<name>Disable Restart Parameter</name>
-<t>This parameter is used to indicate that the restart procedure
-is requested to be disabled. Both endpoints of an association MUST
-include this parameter in the INIT chunk and INIT ACK chunk when
-establishing an association and MUST include it in the ASCONF chunk
-when adding an address to successfully disable the restart procedure.</t>
-<artwork align="left">
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|         Type = 0xC007         |         Length = 4            |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</artwork>
 
-<dl newline="true">
-<dt>Parameter Type: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the IANA defined parameter type for the Disable Restart Parameter.
-IANA is requested to assign the value 0xC007 for this parameter type.</t></dd>
-<dt>Parameter Length: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the length in bytes of the parameter.
-The value MUST be 4.</t></dd>
-</dl>
-<t>[NOTE to RFC-Editor: Assignment of parameter type to be confirmed by IANA.]</t>
-<t>The Disable Restart Parameter MAY appear in INIT, INIT ACK and ASCONF chunks
-and MUST NOT appear in any other chunk.</t>
-</section>
-
-<section anchor='vtags-parameter'>
-<name>VTags Parameter</name>
-<t>This parameter is used to help a NAT function to recover from state loss.</t>
-<artwork align="left">
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|     Parameter Type = 0xC008   |     Parameter Length = 16     |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                 ASCONF-Request Correlation ID                 |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                   Internal Verification Tag                   |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                    Remote Verification Tag                    |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-</artwork>
-
-<dl newline="true">
-<dt>Parameter Type: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the IANA defined parameter type for the VTags Parameter.
-IANA is requested to assign the value 0xC008 for this parameter type.</t></dd>
-<dt>Parameter Length: 2 bytes (unsigned integer)</dt>
-<dd><t>This field holds the length in bytes of the parameter.
-The value MUST be 16.</t></dd>
-<dt>ASCONF-Request Correlation ID: 4 bytes (unsigned integer)</dt>
-<dd><t>This is an opaque integer assigned by the sender to identify each
-request parameter. The receiver of the ASCONF Chunk will copy this
-32-bit value into the ASCONF Response Correlation ID field of the
-ASCONF ACK response parameter. The sender of the packet containing the ASCONF
-chunk can use this same value in the ASCONF ACK chunk to find which request the
-response is for. The receiver MUST NOT change the value of the ASCONF-Request
-Correlation ID.</t></dd>
-<dt>Internal Verification Tag: 4 bytes (unsigned integer)</dt>
-<dd><t>The Verification Tag that the internal host has chosen for the association.
-The Verification Tag is a unique 32-bit tag that accompanies
-any incoming SCTP packet for this association to the Internal-Address.</t></dd>
-<dt>Remote Verification Tag: 4 bytes (unsigned integer)</dt>
-<dd><t>The Verification Tag that the host holding the Remote-Address has
-chosen for the association.
-The VTag is a unique 32-bit tag that accompanies any outgoing SCTP packet for
-this association to the Remote-Address.</t></dd>
-</dl>
-<t>[NOTE to RFC-Editor: Assignment of parameter type to be confirmed by IANA.]</t>
-<t>The VTags Parameter MAY appear in ASCONF chunks and MUST NOT appear in
-any other chunk.</t>
-</section>
 </section>
 </section>
 
