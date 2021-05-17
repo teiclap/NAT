@@ -647,9 +647,6 @@ port number when initiating an association with the same peer server.
 This creates a situation where the NAT function will not be able to forward 
 the INIT chunk.
 This situation is discussed in <xref target='mbitport'/>.</t></li>
-<li><t>If an SCTP endpoint is a server communicating with multiple peers and the
-peers are behind the same NAT function, then the these peers cannot be
-distinguished by the server. This case is discussed in <xref target='collision'/>.</t></li>
 <li><t>A restart of a NAT function during a conversation could cause a loss of its state.
 This problem and its solution is discussed in <xref target='restart'/>.</t></li>
 <li><t>NAT functions need to deal with SCTP packets being fragmented at the IP layer.
@@ -752,97 +749,27 @@ alternative answers from the network:
 
 <section>
 <name>NAT Function Considerations</name>
-<t>If the NAT function detects a collision of internal port numbers and
-verification tags, it SHOULD send a packet containing an ABORT chunk with the
-M bit set if the collision is triggered by a packet containing an INIT or
-INIT ACK chunk.
-If such a collision is triggered by a packet containing an ASCONF chunk,
-it SHOULD send a packet containing an ERROR chunk with the M bit.
+<t>NAT function checks for collision only on packets containing INIT chunk.
+If the NAT function detects a collision of internal port numbers, 
+it SHOULD send a packet containing an ABORT chunk with the
+M bit set.
 The M bit is a new bit defined by this document to express to
 SCTP that the source of this packet is a "middle" box, not the
 peer SCTP endpoint (see <xref target="mbitabort"/>).
-If a packet containing an INIT ACK chunk triggers the collision,
-the corresponding packet containing the ABORT chunk MUST contain the same
-source and destination address and port numbers as the packet containing
-the INIT ACK chunk. If a packet containing an INIT chunk or an ASCONF chunk,
+If a packet containing an INIT chunk,
 the source and destination address and port numbers MUST be swapped.</t>
 <t>The sender of the packet containing an ERROR or ABORT chunk MUST include
-the error cause with cause code 'VTag and Port Number Collision'
-(see PORT_COLL).</t>
+the error cause with cause code 'Port Number Collision'
+(see <xref target="portcollide"/>).</t>
 </section>
 
 <section>
 <name>Endpoint Considerations</name>
-<t>The sender of the packet containing the INIT chunk or the receiver
-of a packet containing the INIT ACK chunk, upon reception of a packet containing
+<t>The sender of the packet containing the INIT chunk upon reception of a packet containing
 an ABORT chunk with M bit set and the appropriate error cause code for
 colliding NAT binding table state is included, SHOULD reinitiate the
-association setup procedure after choosing a new initiate tag,
-if the association is in COOKIE-WAIT state.
-In any other state, the SCTP endpoint MUST NOT respond.</t>
+association setup procedure after choosing a new Internal Port.</t>
 
-<t>The sender of the packet containing the ASCONF chunk, upon reception of a
-packet containing an ERROR chunk with M bit set, MUST stop adding the path to
-the association.</t>
-</section>
-</section>
-
-<section anchor='collision'>
-<name>Handling of Internal Port Number Collisions</name>
-<t>When two SCTP hosts are behind an SCTP-aware NAT it is possible that two
-SCTP hosts in the Internal-Address space will want to set up an
-SCTP association with the same server running on the same remote host.
-If the two hosts choose the same internal port, this is considered an
-internal port number collision.</t>
-<t>For the NAT function, appropriate tracking can be performed by assuring that
-the VTags are unique between the two hosts.</t>
-<section>
-<name>NAT Function Considerations</name>
-<t>The NAT function, when processing the packet containing the INIT ACK chunk,
-SHOULD note in its NAT binding table if the association supports the
-disable restart extension.
-This note is used when establishing future associations (i.e. when processing
-a packet containing an INIT chunk from an internal host) to decide if the
-connection can be allowed.
-The NAT function does the following when processing a packet containing an
-INIT chunk:</t>
-<ul>
-<li><t>If the packet containing the INIT chunk is originating from an internal
-port to a remote port for which the NAT function has no matching NAT binding
-table entry, it MUST allow the packet containing the INIT chunk creating
-an NAT binding table entry.</t></li>
-<li><t>If the packet containing the INIT chunk matches an existing NAT binding
-table entry, it MUST validate that the disable restart feature is supported and,
-if it does, allow the packet containing the INIT chunk to be forwarded.</t></li>
-<li><t>If the disable restart feature is not supported, the NAT function SHOULD
-send a packet containing an ABORT chunk with the M bit set.</t></li>
-</ul>
-<t>The 'Port Number Collision' error cause (see <xref target='portcollide' />)
-MUST be included in the ABORT chunk sent in response to the packet containing
-an INIT chunk.</t>
-<t>If the collision is triggered by a packet containing an ASCONF chunk,
-a packet containing an ERROR chunk with the 'Port Number Collision' error cause
-SHOULD be sent in response to the packet containing the ASCONF chunk.</t>
-</section>
-<section>
-<name>Endpoint Considerations</name>
-<t>For the remote SCTP server this means that the Remote-Port and the
-Remote-Address are the same.
-If they both have chosen the same Internal-Port the server cannot distinguish
-between both associations based on the address and port numbers.
-For the server it looks like the association is being restarted.
-To overcome this limitation the client sends a Disable Restart parameter in
-the INIT chunk.</t>
-<t>When the server receives this parameter it does the following:</t>
-<ul>
-<li><t>It MUST include a Disable Restart parameter in the INIT ACK to
-inform the client that it will support the feature.</t></li>
-<li><t>It MUST disable the restart procedures defined in <xref target='RFC4960'/>
-for this association.</t></li>
-</ul>
-<t>Servers that support this feature will need to be capable of maintaining
-multiple connections to what appears to be the same peer
-(behind the NAT function) differentiated only by the VTags.</t>
 </section>
 </section>
 
@@ -850,87 +777,34 @@ multiple connections to what appears to be the same peer
 <name>Handling of Missing State</name>
 <section>
 <name>NAT Function Considerations</name>
-<t>If the NAT function receives a packet from the internal network
+<t>When experiencing a restart, the NAT function will start handling SCTP
+packets with time difference between the ones containing INIT chunks
+and all the other ones.
+Handling of SCTP packets containing INIT chunks will start at least
+4 * HB.interval after handling other SCTP packets (see section 15 
+of <xref target='RFC4960' /> ). This avoids race condition between
+the recreation of existing Entries in the NAT Table and the creation
+of new ones from new Association requests.</t>
+
+<t>If the NAT function receives a packet not containing an INIT chunk from the internal network
 for which the lookup procedure does not find an entry in the NAT binding table,
-a packet containing an ERROR chunk SHOULD be sent back with the M bit set.
-The source address of the packet containing the ERROR chunk MUST
-be the destination address of the packet received from the internal network.
-The verification tag is reflected and the T bit is set.
-Such a packet containing an ERROR chunk SHOULD NOT
-be sent if the received packet contains an ASCONF chunk with the VTags parameter
-or an ABORT, SHUTDOWN COMPLETE or INIT ACK chunk.
-A packet containing an ERROR chunk MUST NOT be sent if the
-received packet contains an ERROR chunk with the M bit set.
-In any case, the packet SHOULD NOT be forwarded to the remote address.</t>
-<t>If the NAT function receives a packet from the internal network for which it
-has no NAT binding table entry and the packet contains an ASCONF chunk with the
-VTags parameter, the NAT function MUST update its NAT binding table according
-to the verification tags in the VTags parameter and, if present, the
-Disable Restart parameter.</t>
-<t>When sending a packet containing an ERROR chunk, the error cause
-'Missing State' (see MISS_STATE) MUST be included and the
-M bit of the ERROR chunk MUST be set (see <xref target='mbiterr'/>).</t>
+it must create an Entry for that packet and forward it.
+If the NAT function not containing an INIT chunk from the external network
+for which the lookup procedure does not find an entry in the NAT binding table,
+it must silently drop it.</t>
 </section>
 <section>
 <name>Endpoint Considerations</name>
-<t>Upon reception of this packet containing the ERROR chunk by an SCTP endpoint
-the receiver takes the following actions:</t>
-<ul>
-<li><t>It SHOULD validate that the verification tag is reflected by looking
-at the VTag that would have been included in an outgoing packet.
-If the validation fails, discard the received packet containing the ERROR chunk.</t></li>
-<li><t>It SHOULD validate that the peer of the SCTP association supports
-the dynamic address extension.
-If the validation fails, discard the received packet containing the ERROR chunk.</t></li>
-<li><t>It SHOULD generate a packet containing a new ASCONF chunk containing the
-VTags parameter (see VTAG-PARAMETERS) and the Disable Restart
-parameter (see DISRESTART) if the association is using the
-disable restart feature.
-By processing this packet the NAT function can recover the appropriate state.
-The procedures for generating an ASCONF chunk can be found in
-<xref target='RFC5061'/>.</t></li>
-</ul>
-<t>The peer SCTP endpoint receiving such a packet containing an ASCONF chunk
-SHOULD add the address and respond with an acknowledgment if the
-address is new to the association (following all procedures defined in
-<xref target='RFC5061'/>).
-If the address is already part of the association, the SCTP endpoint
-MUST NOT respond with an error, but instead SHOULD respond with a packet
-containing an ASCONF ACK chunk acknowledging the address and take no action
-(since the address is already in the association).</t>
-<t>Note that it is possible that upon receiving a packet containing an
-ASCONF chunk containing the VTags parameter the NAT function will realize that it has an
-'Internal Port Number and Verification Tag collision'.
-In such a case the NAT function SHOULD send a packet containing an ERROR chunk with the
-error cause code set to 'VTag and Port Number Collision'
-(see PORT_COLL).</t>
-<t>If an SCTP endpoint receives a packet containing an ERROR chunk with
-'Internal Port Number and Verification Tag collision' as the error cause
-and the packet in the Error Chunk contains an ASCONF with
-the VTags parameter, careful examination of the association is necessary.
-The endpoint does the following:</t>
-<ul>
-<li><t>It MUST validate that the verification tag is reflected by looking
-at the VTag that would have been included in the outgoing
-packet. If the validation fails, it MUST discard the packet.</t></li>
-<li><t>It MUST validate that the peer of the SCTP association supports
-the dynamic address extension. If the peer does not support this extension,
-it MUST discard the received packet containing the ERROR chunk.</t></li>
-<li><t>If the association is attempting to add an address (i.e. following
-the procedures in <xref target='multihomed'/>) then the endpoint MUST NOT
-consider the address part of the association and SHOULD make no
-further attempt to add the address (i.e. cancel any ASCONF timers and
-remove any record of the path), since the NAT function has a VTag collision
-and the association cannot easily create a new VTag (as it would if
-the error occurred when sending a packet containing an INIT chunk).</t></li>
-<li><t>If the endpoint has no other path, i.e. the procedure was executed
-due to missing a state in the NAT function, then the endpoint MUST abort the
-association.
-This would occur only if the local NAT function restarted and accepted a new
-association before attempting to repair the missing state (Note that this
-is no different than what happens to all TCP connections when a NAT function
-looses its state).</t></li>
-</ul>
+<t>Upon restart of a NAT function, the endpoint will experience connectivity
+interruption, depending on the Association state it will keep on retrying
+sending SCTP packets containint DATA chunks or HB chunks.
+Since the longest interval between SCTP packets is HB.interval, it will be able
+restoring the connectivity at most 2 * HB.interval after NAT function is back at work.
+</t>
+<T>If the Endpoint is trying to establish an Association, it will experience a longer
+connectivity unavalilability of more than 4 * HB.interval as NAT needs to rebuild
+the NAT Table with the existing Associations first. 
+</T>
 </section>
 </section>
 
@@ -956,12 +830,45 @@ This allows for a faster recovery from this packet drop.</t>
 <name>Multi Point Traversal Considerations for Endpoints</name>
 <t>If a multi-homed SCTP endpoint behind a NAT function connects to a peer,
 it MUST first set up the association single-homed with only one
-address causing the first NAT function to populate its state.
-Then it SHOULD add each IP address using packets containing ASCONF chunks
+address causing the first NAT function to populate its state.</t>
+<t> Once an Association has been created, it's possible to add further
+IP addresses, but before adding each IP address it must be created
+the needed set of Entries in all NAT functions towards all the peer's
+IP addresses. An INIT chunk containing a RJ option (see <xref target="repetita_juvant" />)
+SHOULD be sent towards all peers IP addresses.
+The result from that INIT is according to the given rules for Association
+setup (see <xref target="setup"/>) and can cause collision.
+The reception of INIT ACK with the same VTAG as the existing Association
+confirms that the path from the new IP address and the remote one is
+available and that all the NATs involved are properly configured.
+</t>
+<t>Then the Endpoint SHOULD add each IP address using packets containing ASCONF chunks
 sent via their respective NAT functions.
 The address used in the Add IP address parameter is the wildcard address
 (0.0.0.0 or ::0) and the address parameter in the ASCONF chunk SHOULD also
 contain the VTags parameter and optionally the Disable Restart parameter.</t>
+
+<section>
+<name>NAT Function Considerations</name>
+<t> NAT function will threat the INIT chunk containing a RJ option in the same
+way as it does with INIT without RJ option. NAT doesn't differentiate between
+paths and has no knowledge about the Association.
+NAT function applies the same rules in case of collision (see <xref target="mbitport" />)
+</t>
+</section>
+
+<section>
+<name>Endpoint Considerations</name>
+<t>
+When the Endpoint receives an INIT chunk with RJ option set, it MUST check that the
+included parameters Internal-Port, Remote-Port, Internal-VTag and Remote-VTag 
+belong to an existing Association, in that case it MUST reply with INIT ACK specifying
+the existing Remote-VTag, no other actions SHOULD be performed. If the parameters
+are not identified, the Endpoint SHOULD reply with ABORT.
+</t>
+</section>
+
+
 </section>
 
 </section>
