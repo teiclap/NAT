@@ -642,10 +642,10 @@ number of problems can arise as it tries to communicate with its peers:</t>
 <ul>
 <li><t>IP addresses can not be included in the SCTP packet. This is
 discussed in <xref target='setup'/>.</t></li>
-<li><t>More than one host behind a NAT function could select the same VTag and source
-port number when communicating with the same peer server.
-This creates a situation where the NAT function will not be able to tell the
-two associations apart.
+<li><t>More than one host behind a NAT function could select the same source
+port number when initiating an association with the same peer server.
+This creates a situation where the NAT function will not be able to forward 
+the INIT chunk.
 This situation is discussed in <xref target='mbitport'/>.</t></li>
 <li><t>If an SCTP endpoint is a server communicating with multiple peers and the
 peers are behind the same NAT function, then the these peers cannot be
@@ -678,8 +678,30 @@ The INIT chunk and the INIT ACK chunk MUST NOT contain any Host Name
 parameters.</t>
 <t>If the association is intended to be finally multi-homed, the procedure in
 <xref target='multihomed'/> MUST be used.</t>
-<t>The INIT and INIT ACK chunk SHOULD contain the Disable Restart parameter
-defined in DISRESTART.</t>
+
+<t>
+       At the Association initialization, the Client will experience one out of three
+       alternative answers from the network:
+       <li>
+              <t>
+                     INIT-ACK from the peer, this means a path has been established through
+                     all NATs and the Association can be established.
+              </t>
+       </li>
+       <li>
+              <t>
+                     ABORT with M-bit set from one of the NATs within the path, this means 
+                     that one Association cannot be established. The SCTP User application
+                     SHOULD decide whether to retry with a different Internal Port or to give up.
+                     The way SCTP and the SCTP User interact in this case is implementation dependent.
+              </t>
+       </li>
+       <li>
+              <t>
+                     ABORT from the remote peer.
+              </t>
+       </li>
+</t>
 </section>
 
 <section anchor='mbitport'>
