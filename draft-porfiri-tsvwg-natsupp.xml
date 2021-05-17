@@ -801,10 +801,10 @@ sending SCTP packets containint DATA chunks or HB chunks.
 Since the longest interval between SCTP packets is HB.interval, it will be able
 restoring the connectivity at most 2 * HB.interval after NAT function is back at work.
 </t>
-<T>If the Endpoint is trying to establish an Association, it will experience a longer
+<t>If the Endpoint is trying to establish an Association, it will experience a longer
 connectivity unavalilability of more than 4 * HB.interval as NAT needs to rebuild
 the NAT Table with the existing Associations first. 
-</T>
+</t>
 </section>
 </section>
 
