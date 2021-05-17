@@ -682,6 +682,7 @@ parameters.</t>
 <t>
        At the Association initialization, the Client will experience one out of three
        alternative answers from the network:
+</t>       
        <li>
               <t>
                      INIT-ACK from the peer, this means a path has been established through
@@ -701,7 +702,7 @@ parameters.</t>
                      ABORT from the remote peer.
               </t>
        </li>
-</t>
+
 </section>
 
 <section anchor='mbitport'>
