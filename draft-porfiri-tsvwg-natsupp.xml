@@ -679,49 +679,66 @@ parameters.</t>
 <t>If the association is intended to be finally multi-homed, the procedure in
 <xref target='multihomed'/> MUST be used.</t>
 
+</section>
+
+<section anchor='mbitport'>
+<name>Handling of Internal Port Number Collisions</name>
+<t>Consider the case where two hosts in the Internal-Address space want to
+set up an SCTP association with the same service provided by some remote hosts.
+This means that the Remote-Port is the same.
+If they both choose the same Internal-Port the NAT function will experience 
+collision when receiving the INIT and trying to create an Entry in the NAT Tables.
+In such case NAT will send an ABORT chunk with M-bit set to the SCTP Client.
+Since it's up to the SCTP User Application to choose the Internal Port, it may
+be that an Association chooses the Internal Port from the ephemeral port range at 
+random (see <xref target='RFC6056'/>), this would make the probability for Port Number
+Collision low. 
+</t>
+
 <t>
 At the Association initialization, the Client will experience one out of three
 alternative answers from the network:
 </t>
-<ul>     
-<li><t> INIT-ACK from the peer, this means a viable path exists between peers, all the
-involved NATs have NAT tables properly configured and the Association can be established.
-</t></li>
-       <li>
-              <t>
+       <ul>
+              <li>
+                     <t> INIT-ACK from the peer, this means a viable path exists between peers, all 
+                            the involved NATs have NAT tables properly configured and the Association can be established.</t>
+              </li>
+              <li>
+                     <t>
                      ABORT with M-bit set from one of the NATs within the path, this means 
                      that one Association cannot be established. The SCTP User application
                      SHOULD decide whether to retry with a different Internal Port or to give up.
                      The way SCTP and the SCTP User interact in this case is implementation dependent.
               </t>
-       </li>
-       <li>
-              <t>
+              </li>
+              <li>
+                     <t>
                      ABORT from the remote peer.
               </t>
-       </li>
-</ul>
-<t>
+              </li>
+       </ul>
+       <t>
        The wait SCTP and SCTP User Application interact can be either:
-</t>       
-<ul>
-       <li>
-              <t>An application can request a specific local port number (in the socket API, using bind() with 
+</t>
+       <ul>
+              <li>
+                     <t>An application can request a specific local port number (in the socket API, using bind() with 
                      a non-zero port number), ), and in case of a local port number collision, the connection 
                      setup has to fail. It is up to the application to close() the socket and restart from the beginning.
               </t>
-       </li>
-       <li>
-              <t>An application leaves the local port number selection up to the SCTP stack 
+              </li>
+              <li>
+                     <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
                      or not calling bind() at all before calling connect() or sendto(). However, 
                      once the port number is chosen, it can not be changed. So in case of a local port number collision, 
                      the association setup has to fail. It is up to the application to close() the socket and restart 
                      from the beginning.
               </t>
-        </li>
-       <li>
-              <t>An application leaves the local port number selection up to the SCTP stack 
+              </li>
+              <li>
+                     <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
                      or not calling bind() at all before calling connect() or sendto(). In addition, 
                      it indicates the the SCTP can change the local port number over time 
@@ -729,25 +746,9 @@ involved NATs have NAT tables properly configured and the Association can be est
                      In this case, the SCTP stack can automatically retry a connection setup 
                      in case of an local port number collision.
               </t>
-       </li>
-</ul>
+              </li>
+       </ul>
 
-</section>
-
-<section anchor='mbitport'>
-<name>Handling of Internal Port Number and Verification Tag Collisions</name>
-<t>Consider the case where two hosts in the Internal-Address space want to
-set up an SCTP association with the same service provided by some remote hosts.
-This means that the Remote-Port is the same.
-If they both choose the same Internal-Port and Internal-VTag, the
-NAT function cannot distinguish between incoming packets anymore.
-However, this is unlikely.
-The Internal-VTags are chosen at random and if the Internal-Ports are
-also chosen from the ephemeral port range at random (see <xref target='RFC6056'/>)
-this gives a 46-bit random number that has to match.</t>
-
-<t>The same can happen with the Remote-VTag when a packet containing an
-INIT ACK chunk or an ASCONF chunk is processed by the NAT function.</t>
 
 <section>
 <name>NAT Function Considerations</name>
