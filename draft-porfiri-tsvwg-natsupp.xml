@@ -788,7 +788,7 @@ used by NAT functions and SCTP endpoints.
             <section anchor='repetita_juvant'>
                 <name>Repetita Juvant Parameter</name>
                 <t>
-                    This parameter is used to indicate that INIT chunk is the repetition
+                    The RJ parameter is used to indicate that INIT chunk is the repetition
                     of an already sent one even if it comes from a different source address.
                     It's used from either peers before sending ASCONF in order to setup the
                     NATs in the path.
@@ -1087,6 +1087,11 @@ used by NAT functions and SCTP endpoints.
                     The address used in the Add IP address parameter is the wildcard address
                     (0.0.0.0 or ::0) and the address parameter in the ASCONF chunk SHOULD also
                     contain the VTags parameter.</t>
+                <t>
+                    When an Endpoint gets a new Remote IP Address added to an Association, it SHOULD
+                    send INIT chunks with RJ option towards from all its own IP Addresses towards
+                    that address in order to properly set all the NATs in the path.
+                </t>
                 <section>
                     <name>NAT Function Considerations</name>
                     <t>
