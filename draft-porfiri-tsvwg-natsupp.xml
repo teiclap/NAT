@@ -1253,7 +1253,122 @@ used by NAT functions and SCTP endpoints.
             </section>
 
         </section>
+<section>
+    <name>Examples of Operation</name>
+    <t>
+        This section describes examples of Association Establishements using
+        the reference scenario depicted in
+        <xref target='example_operation_fig'/>.
+        Hosts A1 and A2 implement a distributed client towards the same remote Host. 
+        Hosts B1 and B2 implement a distributed Endpoint 'B' acting as Server. 
+        The Load Balancer functionality is not shown as it doesn't affect SCTP protocol.
+    </t>
+    <figure anchor='example_operation_fig'>
+        <name>Parallel NAT with distributed endpoints Scenario</name>
+        <artwork align="center">
+          Internal      |               External             |       Internal
+                     +------+                             +------+
+                +====|NAT A |=====\    /---\/---\    /====|NAT C |====+
++---------+     |    +------+      \  /          \  /     +------+    |     +---------+
+| Host A1 +-----+       |           \/            \/         |        +-----| Host B1 |
+|         +--+  |       |           |   Network   |          |        |  +--+         |
++---------+  |  |       |           /\            /\         |        |  |  +---------+
+             |  |    +------+      /  \          /  \     +------+    |  |
+             +=======|NAT B |=====/    \---\/---/    \====|NAT D |=======+
+             |  |    +------+                             +------+    |  |
++---------+  |  |       |                                    |        |  |  +---------+
+| Host A2 +--|--+       |                                    |        +--|--+ Host B2 |
+|         +--+          |                                    |           +--+         |
++---------+             |                                    |              +---------+
+</artwork>
+    </figure>
+    <section anchor='sh_success_section'>
+        <name>Single Homed Association Setup</name>
+        <t>
+            This section describes a successfull Association Establishment from A1 towards
+            the distributed endpoint B.
+            The sequence chart is shown in <xref target='sh_success_fig'/>.
+        </t>
+        <figure anchor='sh_success_fig'>
+            <name>Single Homed successfull Association Setup</name>
+            <artwork align="center">
 
+    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
+    |       |       |           |           |           |           |       |
+    +--------------}| INIT      |           |           |           |       |
+    |       |       +----------------------}|           |           |       |
+    |       |       |           |           +----------------------}|       |
+    |       |       |           |           |           |           |       |
+    |       |       |           |           |{----------------------+       |
+    |       |       |{----------------------+           |           |       |
+    |{--------------+ INIT ACK  |           |           |           |       |
+    |       |       |           |           |           |           |       |
+            </artwork>
+        </figure>
+    </section>
+
+    <section>
+        <name>Single Homed Association Setup with Congestion</name>
+        <t>
+            This section describes a successfull Association Establishment from A2 towards
+            the distributed endpoint B. The congestion happens at NAT A. 
+            The sequence chart is shown in
+            <xref target='sh_congest1_fig' />
+            .
+        </t>
+        <figure anchor='sh_congest1_fig'>
+            <name>Single Homed successfull Association Setup after congestion</name>
+            <artwork align="center">
+
+    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
+    |       |       |           |           |           |           |       |
+    |       +------}| INIT      |           |           |           |       |
+    |       |{------+ ABORT     |           |           |           |       |
+    |       +------}| INIT      |           |           |           |       |
+    |       |       +----------------------}|           |           |       |
+    |       |       |           |           +------------------------------}|
+    |       |       |           |           |           |           |       |
+    |       |       |           |           |{------------------------------+
+    |       |       |{----------------------+           |           |       |
+    |       {-------+ INIT ACK  |           |           |           |       |
+    |       |       |           |           |           |           |       |
+            </artwork>
+        </figure>
+    </section>
+
+    <section>
+        <name>Multi Homed Association Setup</name>
+        <t>
+            This section describes how the single homed established at <xref target= 'sh_success_section'/>
+            becomes multihomed. Success happens at all steps.
+            <xref target='mh_success_fig' />
+            .
+        </t>
+        <figure anchor='mh_success_fig'>
+            <name>Multi Homed successfull Association Setup</name>
+            <artwork align="center">
+
+    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
+    |       |       |           |           |           |           |       |
+    +--------------------------}| INIT RJ   |           |           |       |
+    |       |       |           +----------}|           |           |       |
+    |       |       |           |           +----------------------}|       |
+    |       |       |           |           |{----------------------+       |
+    |       |       |           |{----------+           |           |       |
+    |{--------------------------+ INIT ACK  |           |           |       |
+    +--------------------------}| ASCONF    |           |           |       |
+    |       |       |           +----------}|           |           |       |
+    |       |       |           |           +----------------------}|       |
+    |       |       |           |           |{----------------------+       |
+    |       |       |           |{----------+           |           |       |
+    |{--------------------------+ ASCONF ACK|           |           |       |
+    |       |       |           |           |           |           |       |
+
+            </artwork>
+        </figure>
+    </section>
+
+</section>
         <section>
             <name>IANA Considerations</name>
             <t>[NOTE to RFC-Editor: "RFCXXXX" is to be replaced by the RFC number you
