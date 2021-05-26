@@ -1324,6 +1324,7 @@ used by NAT functions and SCTP endpoints.
     |       |       |           |           |           |           |       |
     |       +------}| INIT      |           |           |           |       |
     |       |{------+ ABORT     |           |           |           |       |
+    |       |       |           |           |           |           |       |    
     |       +------}| INIT      |           |           |           |       |
     |       |       +----------------------}|           |           |       |
     |       |       |           |           +------------------------------}|
@@ -1336,7 +1337,7 @@ used by NAT functions and SCTP endpoints.
         </figure>
     </section>
 
-    <section>
+    <section anchor='mh_success_section'>
         <name>Multi Homed Association Setup</name>
         <t>
             This section describes how the single homed established at <xref target= 'sh_success_section'/>
@@ -1356,12 +1357,74 @@ used by NAT functions and SCTP endpoints.
     |       |       |           |           |{----------------------+       |
     |       |       |           |{----------+           |           |       |
     |{--------------------------+ INIT ACK  |           |           |       |
+    |       |       |           |           |           |           |       |
     +--------------------------}| ASCONF    |           |           |       |
     |       |       |           +----------}|           |           |       |
     |       |       |           |           +----------------------}|       |
     |       |       |           |           |{----------------------+       |
     |       |       |           |{----------+           |           |       |
     |{--------------------------+ ASCONF ACK|           |           |       |
+    |       |       |           |           |           |           |       |
+    |       |       |           | INIT RJ   |{----------------------+       |
+    |       |       |           |{----------+           |           |       |
+    |{--------------------------+           |           |           |       |
+    +--------------------------}|           |           |           |       |
+    |       |       |           +----------}|           |           |       |
+    |       |       |           | INIT ACK  +----------------------}|       |
+    |       |       |           |           |           |           |       |
+    
+            </artwork>
+        </figure>
+    </section>
+
+    <section>
+        <name>Multi Homed Association Setup</name>
+        <t>
+            This section describes how the multihome homed established at
+            <xref target='mh_success_section' />
+            becomes multihomed from the other peer. Success happens at all steps.
+            <xref target='mhmh_success_fig' />
+            .
+        </t>
+        <figure anchor='mhmh_success_fig'>
+            <name>Multi Homed successfull Association Setup</name>
+            <artwork align="center">
+
+    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
+    |       |       |           |           |           |           |       |
+    |       |       |           | INIT RJ   |           |{----------+       |
+    |       |       |{----------------------------------+           |       |
+    |{--------------+           |           |           |           |       |
+    +--------------}|           | INIT ACK  |           |           |       |
+    |       |       +----------------------------------}|           |       |
+    |       |       |           |           |           +----------}|       |
+    |       |       |           | INIT RJ   |           |{----------+       |
+    |       |       |           |{----------------------+           |       |
+    |{--------------------------+           |           |           |       |
+    +--------------------------}| INIT ACK  |           |           |       |
+    |       |       |           +----------------------}|           |       |
+    |       |       |           |           |           +----------}|       |
+    |       |       |           |           |           |           |       |
+    |       |       |           | ASCONF    |           |{----------+       |
+    |       |       |{----------------------------------+           |       |
+    |{--------------+           |           |           |           |       |
+    +--------------}|           | ASCONF ACK|           |           |       |
+    |       |       +----------------------------------}|           |       |
+    |       |       |           |           |           +----------}|       |
+    |       |       |           |           |           |           |       |   
+    +--------------}|           | INIT RJ   |           |           |       |
+    |       |       +----------------------------------}|           |       |
+    |       |       |           |           |           +----------}|       |
+    |       |       |           | INIT ACK  |           |{----------+       |
+    |       |       |{----------------------------------+           |       |
+    |{--------------+           |           |           |           |       |
+    |       |       |           |           |           |           |       |
+    +--------------------------}| INIT RJ   |           |           |       |    
+    |       |       |           +----------------------}|           |       |
+    |       |       |           |           |           +----------}|       |
+    |       |       |           | INIT ACK  |           |{----------+       |
+    |       |       |           |{----------------------+           |       |
+    |{--------------------------+           |           |           |       |
     |       |       |           |           |           |           |       |
 
             </artwork>
