@@ -4,13 +4,13 @@
 <?rfc compact='yes'?>
 <?rfc subcompact='no'?>
 
-<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-ietf-tsvwg-natsupp-23-to-be" version="3">
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-porfiri-tsvwg-natsupp-00" version="3">
 
     <front>
         <title abbrev='SCTP NAT Support'>
 Stream Control Transmission Protocol (SCTP) Network Address Translation Support
 </title>
-        <seriesInfo name="Internet-Draft" value="draft-ietf-tsvwg-natsupp-23-to-be" />
+        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-natsupp-00" />
 
         <!-- ************** RANDALL STEWART ***************-->
         <author initials='R. R.' surname='Stewart' fullname='Randall R. Stewart'>
@@ -55,7 +55,7 @@ Stream Control Transmission Protocol (SCTP) Network Address Translation Support
             </address>
         </author>
 
-        <!-- *************** IRENE RUENGELER ***************** -->
+        <!-- *************** CLAUDIO PORFIRI ***************** -->
         <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
             <organization abbrev='Ericsson AB'>
                   Ericsson AB</organization>
@@ -298,8 +298,7 @@ Internal-Address.</t>
                         ) that the internal host has chosen for an
 association.
 The VTag is a unique 32-bit tag that accompanies any incoming SCTP packet
-for this association to the Internal-Address. When SCTP packet contains an
-INIT chunk VTag is set to zero.
+for this association to the Internal-Address. 
                     </t>
                 </dd>
                 <dt>Remote-Address (Rem-Addr)</dt>
@@ -318,8 +317,7 @@ INIT chunk VTag is set to zero.
                         )
 that the host holding the Remote-Address has chosen for an association.
 The VTag is a unique 32-bit tag that accompanies any outgoing
-SCTP packet for this association to the Remote-Address. When SCTP packet contains an
-INIT chunk VTag is set to zero.
+SCTP packet for this association to the Remote-Address. 
                     </t>
                 </dd>
                 <dt>External-Address (Ext-Addr)</dt>
@@ -523,7 +521,7 @@ state in the NAT function to later handle incoming packets.</t>
 
                 <t>
                     Typically, the NAT function has to maintain a NAT binding table
-of Internal-Port, Remote-Port, Internal-Address, Remote-Address, Internal-VTag.
+of Internal-Port, Remote-Port, Internal-Address, Remote-Address.
 An entry in that NAT binding table is called a NAT-State control block.
 The function Create() obtains the just mentioned parameters and returns
 a NAT-State control block. Create() instantiates a supervision timer on
@@ -552,11 +550,6 @@ Internal-Address, Remote-Address, Internal-Port and Remote-Port.</t>
                     NAT is able understanding that the SCTP packet transports an INIT chunk because
 the SCTP common header will have VTAG=0 (see section 3.1 of
                     <xref target='RFC4960' />
-                    ). 
-NAT needs to parse the SCTP packet only in case it contains an INIT chunk, in such case it will read the Int-VTag
-from the INIT chunk (see section 3.3.2 of
-                    <xref target='RFC4960' />
-                    ).                   
                 </t>
 
                 <t>The processing of outgoing SCTP packets containing an INIT chunk
@@ -578,7 +571,7 @@ message flows in this section.</t>
               if lookup(Int-Port, Rem-Port, Rem-Addr) == true
                      sendAbort(Rem-Addr, Rem-Port, Int-Addr, Int-Port, M-bit)
               else       
-                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr, Int-VTag)
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
                      Returns(control block)
                      forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
@@ -618,7 +611,7 @@ Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                   Rem-VTag
 
               if lookup(Int-Port, Rem-Port, Rem-Addr) == false
-                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr, Int-VTag)
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
                      Returns(control block)                  
               forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
@@ -650,11 +643,7 @@ message flows in this section.</t>
               if lookup(Int-Port, Rem-Port, Rem-Addr) == true
                      sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
               else  
-                    if (INIT has RJ option set) {
-                        if lookup(Int-VTag) == false
-                            sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
-                    }
-                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr, Int-VTag)
+                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
                      Returns(control block)
                      forwardPkt(Rem-Addr, Rem-Port, Int-Addr, Int-Port)
 
@@ -967,6 +956,20 @@ used by NAT functions and SCTP endpoints.
 
             </section>
 
+            <section anchor='setup_nat'>
+                <name>Association Setup Considerations for NAT</name>
+                <t>
+                    When Endpoint is Distributed, NAT needs the cooperation of a Load Balancer
+                    function for handling incoming and outgoing Association Requests.
+                    It's up to the Load Balancer internal design the strategy for permitting
+                    a Distributed Endpoint to handle the traffic.
+                    Functionally, it's important that Load Balancer provides NAT a way
+                    way for assigning Associations to multiple SCTP Hosts and being able
+                    recognizing whether an Association Request with RJ Option set belongs
+                    to and existing Association and what SCTP Host is in charge for that.
+                </t>
+            </section>
+
             <section anchor='mbitport'>
                 <name>Handling of Internal Port Number Collisions</name>
                 <t>
@@ -1061,11 +1064,11 @@ used by NAT functions and SCTP endpoints.
                         ).
                     </t>
                     <t>
-                        If the INIT chunk contains the RJ option, the NAT Table is searched for the Initial-VTag 
-                        so that INIT can be addressed to the right Host. If the Internal-VTag is found, a new
-                        entry is created in the NAT table containing the Internal-Address, Internal-Port,
-                        Remote-Address, Remote-Port and Internal-VTag. If the Internal-VTag is not found,
-                        the NAT function  SHOULD send a packet containing an ABORT chunk with the
+                        If the INIT chunk contains the RJ option and the Endpoint is Distributed,
+                        NAT will involve the Load Balancer function for retrieving the Internal-Address 
+                        of the SCTP Host handling the Association.
+                        If the Load Balancer cannot relate the INIT chunk to an existing Association, 
+                        NAT function  SHOULD send a packet containing an ABORT chunk with the
                         M bit set.
                         The M bit is a new bit defined by this document to express to
                         SCTP that the source of this packet is a "middle" box, not the
@@ -1117,7 +1120,7 @@ used by NAT functions and SCTP endpoints.
                     <t>If the NAT function receives a packet not containing an INIT chunk from the internal network
                     for which the lookup procedure does not find an entry in the NAT binding table,
                     it must create an Entry for that packet and forward it.
-                    If the NAT function not containing an INIT chunk from the external network
+                    If the NAT function receives a packet not containing an INIT chunk from the external network
                     for which the lookup procedure does not find an entry in the NAT binding table,
                     it must silently drop it.</t>
                 </section>
