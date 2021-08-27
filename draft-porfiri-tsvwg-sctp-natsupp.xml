@@ -4,13 +4,13 @@
 <?rfc compact='yes'?>
 <?rfc subcompact='no'?>
 
-<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-porfiri-tsvwg-natsupp-00" version="3">
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-porfiri-tsvwg-sctp-natsupp-00" version="3">
 
     <front>
         <title abbrev='SCTP NAT Support'>
 Stream Control Transmission Protocol (SCTP) Network Address Translation Support
 </title>
-        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-natsupp-00" />
+        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-00" />
 
         <!-- *************** CLAUDIO PORFIRI ***************** -->
         <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
