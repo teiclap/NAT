@@ -501,7 +501,7 @@ supervision timer.</t>
 
                 <t>The entries in the NAT binding table need to fulfill some uniqueness
 conditions.
-There can not be more than one entry NAT binding table with the same 4-uple of
+There can not be more than one entry NAT binding table with the same 4-tuple of
 Internal-Address, Remote-Address, Internal-Port and Remote-Port.</t>
 
                 <t>
@@ -1763,9 +1763,8 @@ and
             </t>
             <t>
                 The author also wishes to thank
-                the authors of draft-ietf-tsvwg-natsupp
-                for
-providing a very good proposal and a base for study.
+                the authors of draft-ietf-tsvwg-natsupp-22
+                which this document is based. 
             </t>
         </section>
 
