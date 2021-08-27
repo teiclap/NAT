@@ -10,7 +10,7 @@
         <title abbrev='SCTP NAT Support'>
 Stream Control Transmission Protocol (SCTP) Network Address Translation Support
 </title>
-        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-natsupp-00" />
+        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-00" />
 
         <!-- *************** CLAUDIO PORFIRI ***************** -->
         <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
@@ -526,12 +526,12 @@ message flows in this section.</t>
  Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                   Rem-VTag=0
 
-              if lookup(Int-Port, Rem-Port, Rem-Addr) == true
-                     sendAbort(Rem-Addr, Rem-Port, Int-Addr, Int-Port, M-bit)
-              else       
-                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
-                     Returns(control block)
-                     forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
+         if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+                sendAbort(Rem-Addr, Rem-Port, Int-Addr, Int-Port, M-bit)
+         else       
+                Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
+                Returns(control block)
+                forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
 
            Translates To:
@@ -575,7 +575,7 @@ Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
 
               Translates To:
 
-                          Ext-Addr:Int-Port ------> Rem-Addr:Rem-Port
+                         Ext-Addr:Int-Port ------> Rem-Addr:Rem-Port
                                            Rem-VTag
 ]]>
                 </artwork>
@@ -598,12 +598,12 @@ message flows in this section.</t>
                                              Int-VTag=0
 
 
-              if lookup(Int-Port, Rem-Port, Rem-Addr) == true
-                     sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
-              else  
-                     Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
-                     Returns(control block)
-                     forwardPkt(Rem-Addr, Rem-Port, Int-Addr, Int-Port)
+            if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+                sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
+            else  
+                Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
+                Returns(control block)
+                forwardPkt(Rem-Addr, Rem-Port, Int-Addr, Int-Port)
 
 
            Translates To:
@@ -633,8 +633,8 @@ It returns the corresponding entry of the NAT binding table.
                                              Int-VTag
 
               if lookup(Int-Port, Rem-Port, Rem-Addr) == true
-                     Returns(NAT-State control block containing Int-Addr)                  
-                     forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
+                 Returns(NAT-State control block containing Int-Addr)                  
+                 forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
  Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
                    Int-VTag
@@ -1260,20 +1260,20 @@ used by NAT functions and SCTP endpoints.
     <figure anchor='example_operation_fig'>
         <name>Parallel NAT with distributed endpoints Scenario</name>
         <artwork align="center">
-          Internal      |               External             |       Internal
-                     +------+                             +------+
-                +====|NAT A |=====\    /---\/---\    /====|NAT C |====+
-+---------+     |    +------+      \  /          \  /     +------+    |     +---------+
-| Host A1 +-----+       |           \/            \/         |        +-----| Host B1 |
-|         +--+  |       |           |   Network   |          |        |  +--+         |
-+---------+  |  |       |           /\            /\         |        |  |  +---------+
-             |  |    +------+      /  \          /  \     +------+    |  |
-             +=======|NAT B |=====/    \---\/---/    \====|NAT D |=======+
-             |  |    +------+                             +------+    |  |
-+---------+  |  |       |                                    |        |  |  +---------+
-| Host A2 +--|--+       |                                    |        +--|--+ Host B2 |
-|         +--+          |                                    |           +--+         |
-+---------+             |                                    |              +---------+
+      Internal     |           External          |      Internal
+                +------+                        +------+
+             +==|NAT A |==\    /--\/--\    /==|NAT C |==+
++--------+   |  +------+   \  /        \  /   +------+  |     +--------+
+|Host A1 +---+     |        \/          \/       |      +-----|Host B1 |
+|        +-+ |     |        |  Network  |        |      |  +--+        |
++--------+ | |     |        /\          /\       |      |  |  +--------+
+           | |  +------+   /  \        /  \   +------+  |  |
+           +====|NAT B |==/    \--\/--/    \==|NAT D |=====+
+           | |  +------+                      +------+  |  |
++--------+ | |     |                             |      |  |  +--------+
+|Host A2 +-|-+     |                             |      +--|--+Host B2 |
+|        +-+       |                             |         +--+        |
++--------+         |                             |            +--------+
 </artwork>
     </figure>
     <section anchor='sh_success_section'>
@@ -1287,16 +1287,16 @@ used by NAT functions and SCTP endpoints.
             <name>Single Homed successfull Association Setup</name>
             <artwork align="center">
 
-    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
-    |       |       |           |           |           |           |       |
-    +--------------}| INIT      |           |           |           |       |
-    |       |       +----------------------}|           |           |       |
-    |       |       |           |           +----------------------}|       |
-    |       |       |           |           |           |           |       |
-    |       |       |           |           |{----------------------+       |
-    |       |       |{----------------------+           |           |       |
-    |{--------------+ INIT ACK  |           |           |           |       |
-    |       |       |           |           |           |           |       |
+A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
+|       |       |           |           |           |           |     |
++--------------}| INIT      |           |           |           |     |
+|       |       +----------------------}|           |           |     |
+|       |       |           |           +----------------------}|     |
+|       |       |           |           |           |           |     |
+|       |       |           |           |{----------------------+     |
+|       |       |{----------------------+           |           |     |
+|{--------------+ INIT ACK  |           |           |           |     |
+|       |       |           |           |           |           |     |
             </artwork>
         </figure>
     </section>
@@ -1314,19 +1314,19 @@ used by NAT functions and SCTP endpoints.
             <name>Single Homed successfull Association Setup after congestion</name>
             <artwork align="center">
 
-    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
-    |       |       |           |           |           |           |       |
-    |       +------}| INIT      |           |           |           |       |
-    |       |{------+ ABORT     |           |           |           |       |
-    |       |       |           |           |           |           |       |    
-    |       +------}| INIT      |           |           |           |       |
-    |       |       +----------------------}|           |           |       |
-    |       |       |           |           +------------------------------}|
-    |       |       |           |           |           |           |       |
-    |       |       |           |           |{------------------------------+
-    |       |       |{----------------------+           |           |       |
-    |       {-------+ INIT ACK  |           |           |           |       |
-    |       |       |           |           |           |           |       |
+A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
+|       |       |           |           |           |           |     |
+|       +------}| INIT      |           |           |           |     |
+|       |{------+ ABORT     |           |           |           |     |
+|       |       |           |           |           |           |     |    
+|       +------}| INIT      |           |           |           |     |
+|       |       +----------------------}|           |           |     |
+|       |       |           |           +----------------------------}|
+|       |       |           |           |           |           |     |
+|       |       |           |           |{----------------------------+
+|       |       |{----------------------+           |           |     |
+|       {-------+ INIT ACK  |           |           |           |     |
+|       |       |           |           |           |           |     |
             </artwork>
         </figure>
     </section>
@@ -1343,30 +1343,30 @@ used by NAT functions and SCTP endpoints.
             <name>Multi Homed successfull Association Setup</name>
             <artwork align="center">
 
-    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
-    |       |       |           |           |           |           |       |
-    +--------------------------}| INIT RJ   |           |           |       |
-    |       |       |           +----------}|           |           |       |
-    |       |       |           |           +----------------------}|       |
-    |       |       |           |           |{----------------------+       |
-    |       |       |           |{----------+           |           |       |
-    |{--------------------------+ INIT ACK  |           |           |       |
-    |       |       |           |           |           |           |       |
-    +--------------------------}| ASCONF    |           |           |       |
-    |       |       |           +----------}|           |           |       |
-    |       |       |           |           +----------------------}|       |
-    |       |       |           |           |{----------------------+       |
-    |       |       |           |{----------+           |           |       |
-    |{--------------------------+ ASCONF ACK|           |           |       |
-    |       |       |           |           |           |           |       |
-    |       |       |           | INIT RJ   |{----------------------+       |
-    |       |       |           |{----------+           |           |       |
-    |{--------------------------+           |           |           |       |
-    +--------------------------}|           |           |           |       |
-    |       |       |           +----------}|           |           |       |
-    |       |       |           | INIT ACK  +----------------------}|       |
-    |       |       |           |           |           |           |       |
-    
+A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
+|       |       |           |           |           |           |     |
++--------------------------}| INIT RJ   |           |           |     |
+|       |       |           +----------}|           |           |     |
+|       |       |           |           +----------------------}|     |
+|       |       |           |           |{----------------------+     |
+|       |       |           |{----------+           |           |     |
+|{--------------------------+ INIT ACK  |           |           |     |
+|       |       |           |           |           |           |     |
++--------------------------}| ASCONF    |           |           |     |
+|       |       |           +----------}|           |           |     |
+|       |       |           |           +----------------------}|     |
+|       |       |           |           |{----------------------+     |
+|       |       |           |{----------+           |           |     |
+|{--------------------------+ ASCONF ACK|           |           |     |
+|       |       |           |           |           |           |     |
+|       |       |           | INIT RJ   |{----------------------+     |
+|       |       |           |{----------+           |           |     |
+|{--------------------------+           |           |           |     |
++--------------------------}|           |           |           |     |
+|       |       |           +----------}|           |           |     |
+|       |       |           | INIT ACK  +----------------------}|     |
+|       |       |           |           |           |           |     |
+   
             </artwork>
         </figure>
     </section>
@@ -1384,42 +1384,42 @@ used by NAT functions and SCTP endpoints.
             <name>Multi Homed successfull Association Setup</name>
             <artwork align="center">
 
-    A1      A2      NAT A       NAT B       NAT C       NAT D       B1      B2
-    |       |       |           |           |           |           |       |
-    |       |       |           | INIT RJ   |           |{----------+       |
-    |       |       |{----------------------------------+           |       |
-    |{--------------+           |           |           |           |       |
-    +--------------}|           | INIT ACK  |           |           |       |
-    |       |       +----------------------------------}|           |       |
-    |       |       |           |           |           +----------}|       |
-    |       |       |           | INIT RJ   |           |{----------+       |
-    |       |       |           |{----------------------+           |       |
-    |{--------------------------+           |           |           |       |
-    +--------------------------}| INIT ACK  |           |           |       |
-    |       |       |           +----------------------}|           |       |
-    |       |       |           |           |           +----------}|       |
-    |       |       |           |           |           |           |       |
-    |       |       |           | ASCONF    |           |{----------+       |
-    |       |       |{----------------------------------+           |       |
-    |{--------------+           |           |           |           |       |
-    +--------------}|           | ASCONF ACK|           |           |       |
-    |       |       +----------------------------------}|           |       |
-    |       |       |           |           |           +----------}|       |
-    |       |       |           |           |           |           |       |   
-    +--------------}|           | INIT RJ   |           |           |       |
-    |       |       +----------------------------------}|           |       |
-    |       |       |           |           |           +----------}|       |
-    |       |       |           | INIT ACK  |           |{----------+       |
-    |       |       |{----------------------------------+           |       |
-    |{--------------+           |           |           |           |       |
-    |       |       |           |           |           |           |       |
-    +--------------------------}| INIT RJ   |           |           |       |    
-    |       |       |           +----------------------}|           |       |
-    |       |       |           |           |           +----------}|       |
-    |       |       |           | INIT ACK  |           |{----------+       |
-    |       |       |           |{----------------------+           |       |
-    |{--------------------------+           |           |           |       |
-    |       |       |           |           |           |           |       |
+A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
+|       |       |           |           |           |           |     |
+|       |       |           | INIT RJ   |           |{----------+     |
+|       |       |{----------------------------------+           |     |
+|{--------------+           |           |           |           |     |
++--------------}|           | INIT ACK  |           |           |     |
+|       |       +----------------------------------}|           |     |
+|       |       |           |           |           +----------}|     |
+|       |       |           | INIT RJ   |           |{----------+     |
+|       |       |           |{----------------------+           |     |
+|{--------------------------+           |           |           |     |
++--------------------------}| INIT ACK  |           |           |     |
+|       |       |           +----------------------}|           |     |
+|       |       |           |           |           +----------}|     |
+|       |       |           |           |           |           |     |
+|       |       |           | ASCONF    |           |{----------+     |
+|       |       |{----------------------------------+           |     |
+|{--------------+           |           |           |           |     |
++--------------}|           | ASCONF ACK|           |           |     |
+|       |       +----------------------------------}|           |     |
+|       |       |           |           |           +----------}|     |
+|       |       |           |           |           |           |     |   
++--------------}|           | INIT RJ   |           |           |     |
+|       |       +----------------------------------}|           |     |
+|       |       |           |           |           +----------}|     |
+|       |       |           | INIT ACK  |           |{----------+     |
+|       |       |{----------------------------------+           |     |
+|{--------------+           |           |           |           |     |
+|       |       |           |           |           |           |     |
++--------------------------}| INIT RJ   |           |           |     |    
+|       |       |           +----------------------}|           |     |
+|       |       |           |           |           +----------}|     |
+|       |       |           | INIT ACK  |           |{----------+     |
+|       |       |           |{----------------------+           |     |
+|{--------------------------+           |           |           |     |
+|       |       |           |           |           |           |     |
 
             </artwork>
         </figure>
