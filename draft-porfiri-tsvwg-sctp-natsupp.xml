@@ -1151,20 +1151,22 @@ used by NAT functions and SCTP endpoints.
         </section>
 
         <section anchor='multihomed'>
-                <name>Multi Point Traversal Considerations for Endpoints</name>
+                <name>Multipoint Traversal Considerations for Endpoints</name>
                 <t>If a multi-homed SCTP endpoint behind a NAT function connects to a peer,
-                it MUST first set up the association single-homed with only one
+                it MUST first set up the association single-homed with only one destination
                 address causing the first NAT function to populate its state.</t>
                 <t>
-                    Once an Association has been created, it's possible to add further
-                    IP addresses, but before adding each IP address it must be created
-                    the needed set of Entries in all NAT functions towards all the peer's
-                    IP addresses. An INIT chunk containing a RJ option (see
+                    Once an Association has been created, it's possible to add
+                    further external IP addresses for the peer to use, but
+                    before adding each IP address it must be created the
+                    needed set of Entries in all NAT functions towards all the
+                    peer's IP addresses. An INIT chunk containing a RJ option
+                    (see
                     <xref target="repetita_juvant" />
-                    )
-                    SHOULD be sent towards all peers IP addresses.
-                    The result from that INIT is according to the given rules for Association
-                    setup (see
+                    ) SHOULD be sent towards all peers IP addresses using a path
+                    selector that is expected to result in another external
+                    addres than association creation.  The result from that INIT
+                    is according to the given rules for Association setup (see
                     <xref target="setup" />
                     ) and can cause collision.
                     The reception of INIT ACK with the same VTAG as the existing Association
