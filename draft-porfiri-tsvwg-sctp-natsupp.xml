@@ -926,7 +926,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                     a Distributed Endpoint to handle the traffic.
                     Functionally, it's important that Load Balancer provides NAT a way
                     way for assigning Associations to multiple SCTP Hosts and being able
-                    recognizing whether an Association Request with RJ Option set belongs
+                    recognizing whether an Association Request belongs
                     to and existing Association and what SCTP Host is in charge for that.
                 </t>
         </section>
@@ -935,7 +935,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                 <name>Handling of Internal Port Number Collisions</name>
                 <t>
                     Consider the case where two hosts in the Internal-Address space want to
-                    set up an SCTP association with the same service provided by some remote hosts.
+                    set up an SCTP association with the same service provided by some remote host.
                     This means that the Remote-Port is the same.
                     If they both choose the same Internal-Port the NAT function will experience 
                     collision when receiving the INIT and trying to create an Entry in the NAT Tables.
@@ -960,7 +960,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                     <li>
                         <t>
                      ABORT with M-bit set from one of the NATs within the path, this means 
-                     that one Association cannot be established. The SCTP User application
+                     that the Association cannot be established. The SCTP User application
                      SHOULD decide whether to retry with a different Internal Port or to give up.
                      The way SCTP and the SCTP User interact in this case is implementation dependent.
               </t>
@@ -977,14 +977,14 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                 <ul>
                     <li>
                         <t>An application can request a specific local port number (in the socket API, using bind() with 
-                     a non-zero port number), ), and in case of a local port number collision, the connection 
+                     a non-zero port number) and in case of a local port number collision, the connection 
                      setup has to fail. It is up to the application to close() the socket and restart from the beginning.
               </t>
                     </li>
                     <li>
                         <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
-                     or not calling bind() at all before calling connect() or sendto(). However, 
+                     or not calling bind() at all before calling connect() or sendto()). However, 
                      once the port number is chosen, it can not be changed. So in case of a local port number collision, 
                      the association setup has to fail. It is up to the application to close() the socket and restart 
                      from the beginning.
@@ -993,8 +993,8 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                     <li>
                         <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
-                     or not calling bind() at all before calling connect() or sendto(). In addition, 
-                     it indicates the the SCTP can change the local port number over time 
+                     or not calling bind() at all before calling connect() or sendto()). In addition, 
+                     it indicates that the SCTP can change the local port number over time 
                      (in the socket API this would be calling an IPPROTO_SCTP level new socket option). 
                      In this case, the SCTP stack can automatically retry a connection setup 
                      in case of an local port number collision.
@@ -1024,7 +1024,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                         ).
                     </t>
                     <t>
-                        If the INIT chunk contains the RJ option and the Endpoint is Distributed,
+                        If INIT chunk is addressing a Distributed Endpoint,
                         NAT will involve the Load Balancer function for retrieving the Internal-Address 
                         of the SCTP Host handling the Association.
                         If the Load Balancer cannot relate the INIT chunk to an existing Association, 
