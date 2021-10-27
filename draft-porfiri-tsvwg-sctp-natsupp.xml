@@ -688,9 +688,6 @@ entry, the SCTP packet is dropped.</t>
                 <xref target='errcause' />
                 describe chunks
 and error causes sent by NAT functions and received by SCTP endpoints.
-                <xref target='newparam' />
-                describes parameters sent by SCTP endpoints and
-used by NAT functions and SCTP endpoints.
             </t>
         <section anchor='chunks'>
                 <name>Modified Chunks</name>
@@ -1135,10 +1132,8 @@ used by NAT functions and SCTP endpoints.
                     further external IP addresses for the peer to use, but
                     before adding each IP address it must be created the
                     needed set of Entries in all NAT functions towards all the
-                    peer's IP addresses. An INIT chunk containing a RJ option
-                    (see
-                    <xref target="repetita_juvant" />
-                    ) SHOULD be sent towards all peers IP addresses using a path
+                    peer's IP addresses. An INIT chunk SHOULD be sent towards all 
+                    peers IP addresses using a path
                     selector that is expected to result in another external
                     addres than association creation.  The result from that INIT
                     is according to the given rules for Association setup (see
@@ -1238,7 +1233,7 @@ used by NAT functions and SCTP endpoints.
         <name>Parallel NAT with distributed endpoints Scenario</name>
         <artwork align="center">
       Internal     |           External          |      Internal
-                +------+                        +------+
+                +------+                      +------+
              +==|NAT A |==\    /--\/--\    /==|NAT C |==+
 +--------+   |  +------+   \  /        \  /   +------+  |     +--------+
 |Host A1 +---+     |        \/          \/       |      +-----|Host B1 |
@@ -1325,7 +1320,7 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
-+--------------------------}| INIT RJ   |           |           |     |
++--------------------------}|   INIT    |           |           |     |
 |       |       |           +----------}|           |           |     |
 |       |       |           |           +----------------------}|     |
 |       |       |           |           |{----------------------+     |
@@ -1339,7 +1334,7 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |{----------+           |           |     |
 |{--------------------------+ ASCONF ACK|           |           |     |
 |       |       |           |           |           |           |     |
-|       |       |           | INIT RJ   |{----------------------+     |
+|       |       |           |   INIT    |{----------------------+     |
 |       |       |           |{----------+           |           |     |
 |{--------------------------+           |           |           |     |
 +--------------------------}|           |           |           |     |
@@ -1366,13 +1361,13 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
-|       |       |           | INIT RJ   |           |{----------+     |
+|       |       |           |   INIT    |           |{----------+     |
 |       |       |{----------------------------------+           |     |
 |{--------------+           |           |           |           |     |
 +--------------}|           | INIT ACK  |           |           |     |
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
-|       |       |           | INIT RJ   |           |{----------+     |
+|       |       |           |   INIT    |           |{----------+     |
 |       |       |           |{----------------------+           |     |
 |{--------------------------+           |           |           |     |
 +--------------------------}| INIT ACK  |           |           |     |
@@ -1386,14 +1381,14 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           |           |           |           |     |   
-+--------------}|           | INIT RJ   |           |           |     |
++--------------}|           |   INIT    |           |           |     |
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           | INIT ACK  |           |{----------+     |
 |       |       |{----------------------------------+           |     |
 |{--------------+           |           |           |           |     |
 |       |       |           |           |           |           |     |
-+--------------------------}| INIT RJ   |           |           |     |    
++--------------------------}|   INIT    |           |           |     |    
 |       |       |           +----------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           | INIT ACK  |           |{----------+     |
@@ -1675,7 +1670,6 @@ incoming SCTP packets.</t>
         </references>
         <references>
             <name>Informative References</name>
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml-doi/reference.DOI.10.1145/1496091.1496095.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.0793.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3022.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4787.xml" />
@@ -1684,16 +1678,11 @@ incoming SCTP packets.</t>
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5508.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6056.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6146.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6242.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6269.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6333.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6890.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6951.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7857.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8040.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8341.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8900.xml" />
         </references>
         <section numbered='false'>
