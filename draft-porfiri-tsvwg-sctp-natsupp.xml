@@ -44,7 +44,6 @@ Translation (NAPT).</t>
             <t>This document describes the protocol extensions needed for the SCTP
 endpoints and the mechanisms for NAT functions necessary to provide similar
 features of NAPT in the single point and multipoint traversal scenario.</t>
-            <t>Finally, a YANG module for SCTP NAT is defined.</t>
         </abstract>
     </front>
 
@@ -356,7 +355,8 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
                         <xref target='distributed_endpoint_scenario_fig' /> where multiple Hosts
                         behave as Server and share the same Internal Port. A Load Balancer
                         node supports NAT when a new Association request comes.
-                        .
+                        The description of the Load Balancer function and its interwork 
+                        with NAT function is out of the scope of this document.
                     </t>
                     <figure anchor='distributed_endpoint_scenario_fig'>
                         <name>Distributed Endpoint Scenario</name>
@@ -437,7 +437,7 @@ the checksum (CRC32c) over the entire packet needs to be recomputed
                     <xref target='RFC4960' />
                     for details of the CRC32c
 computation).
-This would considerably add to the NAT computational burden, however hardware
+This would considerably add to the NAT computational burden, even though hardware
 support can mitigate this in some implementations.
                 </t>
                 <t>
@@ -451,7 +451,12 @@ and addresses configured within each NAT function.
 Other mechanisms could make use of NAT to NAT communication.
 Such mechanisms have not been deployed on a wide scale base and thus are not
 a preferred solution.
-Therefore an SCTP variant of NAT function has been developed
+Therefore an SCTP variant of NAT function has been developed and is described in
+draft-ietf-tsvwg-natsupp-23 that is the version at the current time.
+This document describes an alternative to that function exploiting most of the
+same principles. Rather than being radically different, it can be seen as a 
+subset with some limitations but less complex and requiring minor computational
+effort at the SCTP Endpoints and at the NAT functions 
 (see
                     <xref target='SCTP_aware_NAT' />
                     ).
@@ -542,7 +547,7 @@ message flows in this section.</t>
            
 ]]>
                 </artwork>
-                <t>Normally a NAT binding table entry will be created.</t>
+                <t>In the normal case a NAT binding table entry will be created.</t>
                 <t>
                     However, it is possible that there is already a NAT binding table entry with
 the same Remote-Address, Internal-Port and Remote-Port but different Internal-Address.
@@ -636,6 +641,8 @@ It returns the corresponding entry of the NAT binding table.
                  Returns(NAT-State control block containing Int-Addr)                  
                  forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
+                Translates To:
+
  Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
                    Int-VTag
 ]]>
@@ -652,19 +659,21 @@ entry, the SCTP packet is dropped.</t>
     This section describes the differences with the existing draft-ietf-tsvwg-natsupp.
 </t>
 <t>
-    The main difference is in the NAT to be stateless rather than following the status
-    of the association. Actually in this proposal NAT doesn't need to parse the SCTP
+    The main difference is that the NAT function is simpler and doesn't require
+    explicit handling of NAT missing states. 
+    Actually in this proposal NAT doesn't need to parse the SCTP
     payloads, it only needs to check the SCTP Common Header and discriminate the
     behavior based on Verification Tag = 0, that indicates the SCTP packet contains
     an INIT chunk. The NAT supervises the association by means of a timer, if no
-    SCTP packets are seen within a certain time, the association is closed.
+    SCTP packets are seen within a certain time, NAT assumes that the association is 
+    closed and will remove the related NAT-entry.
 </t>
 <t>
     The other difference is in the role of the SCTP User. In the current proposal it's
-    the SCTP User to change the originating Endpoint (i.e. choose a different port number)
+    up to the SCTP User to change the originating Endpoint (i.e. choose a different port number)
     if collision is detected. The current proposal guarantees that at each node being
     in a path belonging to an association, there will be only one 4-uple describing
-    an association, that means the NAT doesn't need to take care of VTAG.
+    that association, that means the NAT doesn't need to take care of VTAG.
 </t>
         </section>
     </section>
@@ -963,7 +972,7 @@ used by NAT functions and SCTP endpoints.
                 <name>Handling of Internal Port Number Collisions</name>
                 <t>
                     Consider the case where two hosts in the Internal-Address space want to
-                    set up an SCTP association with the same service provided by some remote hosts.
+                    set up an SCTP association with the same service provided by some remote host.
                     This means that the Remote-Port is the same.
                     If they both choose the same Internal-Port the NAT function will experience 
                     collision when receiving the INIT and trying to create an Entry in the NAT Tables.
@@ -988,7 +997,7 @@ used by NAT functions and SCTP endpoints.
                     <li>
                         <t>
                      ABORT with M-bit set from one of the NATs within the path, this means 
-                     that one Association cannot be established. The SCTP User application
+                     that the Association cannot be established. The SCTP User application
                      SHOULD decide whether to retry with a different Internal Port or to give up.
                      The way SCTP and the SCTP User interact in this case is implementation dependent.
               </t>
@@ -1005,14 +1014,14 @@ used by NAT functions and SCTP endpoints.
                 <ul>
                     <li>
                         <t>An application can request a specific local port number (in the socket API, using bind() with 
-                     a non-zero port number), ), and in case of a local port number collision, the connection 
+                     a non-zero port number) and in case of a local port number collision, the connection 
                      setup has to fail. It is up to the application to close() the socket and restart from the beginning.
               </t>
                     </li>
                     <li>
                         <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
-                     or not calling bind() at all before calling connect() or sendto(). However, 
+                     or not calling bind() at all before calling connect() or sendto()). However, 
                      once the port number is chosen, it can not be changed. So in case of a local port number collision, 
                      the association setup has to fail. It is up to the application to close() the socket and restart 
                      from the beginning.
@@ -1021,8 +1030,8 @@ used by NAT functions and SCTP endpoints.
                     <li>
                         <t>An application leaves the local port number selection up to the SCTP stack 
                      (in the socket socket API by either calling bind() with a zero port number 
-                     or not calling bind() at all before calling connect() or sendto(). In addition, 
-                     it indicates the the SCTP can change the local port number over time 
+                     or not calling bind() at all before calling connect() or sendto()). In addition, 
+                     it indicates that the SCTP can change the local port number over time 
                      (in the socket API this would be calling an IPPROTO_SCTP level new socket option). 
                      In this case, the SCTP stack can automatically retry a connection setup 
                      in case of an local port number collision.
@@ -1263,7 +1272,7 @@ used by NAT functions and SCTP endpoints.
         <name>Parallel NAT with distributed endpoints Scenario</name>
         <artwork align="center">
       Internal     |           External          |      Internal
-                +------+                        +------+
+                +------+                      +------+
              +==|NAT A |==\    /--\/--\    /==|NAT C |==+
 +--------+   |  +------+   \  /        \  /   +------+  |     +--------+
 |Host A1 +---+     |        \/          \/       |      +-----|Host B1 |
@@ -1304,10 +1313,10 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
     </section>
 
     <section>
-        <name>Single Homed Association Setup with Congestion</name>
+        <name>Single Homed Association Setup with Collision</name>
         <t>
             This section describes a successfull Association Establishment from A2 towards
-            the distributed endpoint B. The congestion happens at NAT A. 
+            the distributed endpoint B. The collision happens at NAT A. 
             The sequence chart is shown in
             <xref target='sh_congest1_fig' />
             .
@@ -1337,7 +1346,10 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
         <name>Multi Homed Association Setup</name>
         <t>
             This section describes how the single homed established at <xref target= 'sh_success_section'/>
-            becomes multihomed. Success happens at all steps.
+            becomes multihomed. Note that the decision for what peer has to handle the INIT message requires
+            support of Load Balancer. It's assumed that a Load Balancer exists and provides NAT with the
+            right information.
+            Success happens at all steps.
             <xref target='mh_success_fig' />
             .
         </t>
@@ -1671,38 +1683,7 @@ a lot of associations sharing the same IP addresses and port numbers.</t>
                 <xref target="RFC4963" />
                 .
             </t>
-            <t>
-                The YANG module specified in this document defines a schema for data that is
-designed to be accessed via network management protocols such as
-NETCONF
-                <xref target="RFC6241" />
-                or RESTCONF
-                <xref target="RFC8040" />
-                .
-The lowest NETCONF layer is the secure transport layer, and the
-mandatory-to-implement secure transport is
-Secure Shell (SSH)
-                <xref target="RFC6242" />
-                .
-The lowest RESTCONF layer is HTTPS, and the mandatory-to-implement secure
-transport is TLS
-                <xref target="RFC8446" />
-                .
-            </t>
-            <t>
-                The Network Configuration Access Control
-Model (NACM)
-                <xref target="RFC8341" />
-                provides the means to restrict access for
-particular NETCONF or RESTCONF users to a preconfigured subset of all
-available NETCONF or RESTCONF protocol operations and content.
-            </t>
-            <t>All data nodes defined in the YANG module that can be created, modified,
-and deleted (i.e., config true, which is the default) are considered sensitive.
-Write operations (e.g., edit-config) applied to these data nodes without proper
-protection can negatively affect network operations.
-An attacker who is able to access the SCTP NAT function can undertake various
-attacks, such as:</t>
+
             <ul>
                 <li>
                     <t>Setting a low timeout for SCTP mapping entries to cause failures to deliver
@@ -1728,7 +1709,6 @@ incoming SCTP packets.</t>
         </references>
         <references>
             <name>Informative References</name>
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml-doi/reference.DOI.10.1145/1496091.1496095.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.0793.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3022.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.4787.xml" />
@@ -1737,16 +1717,11 @@ incoming SCTP packets.</t>
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5508.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6056.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6146.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6241.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6242.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6269.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6333.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6890.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.6951.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.7857.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8040.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8341.xml" />
-            <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml" />
             <xi:include href="https://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.8900.xml" />
         </references>
         <section numbered='false'>
