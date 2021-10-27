@@ -1174,7 +1174,11 @@ used by NAT functions and SCTP endpoints.
                     <xref target="repetita_juvant" />
                     ) SHOULD be sent towards all peers IP addresses using a path
                     selector that is expected to result in another external
-                    addres than association creation.  The result from that INIT
+                    addres than association creation. The reason why an INIT chunk
+                    with RJ option set is to be used is for permitting the remote
+                    to be able discriminating between a request for a new Association
+                    in case of Distributed Endpoint. 
+                    The result from that INIT
                     is according to the given rules for Association setup (see
                     <xref target="setup" />
                     ) and can cause collision.
@@ -1198,6 +1202,10 @@ used by NAT functions and SCTP endpoints.
                         NAT function will threat the INIT chunk containing a RJ option in the same
                         way as it does with INIT without RJ option. NAT doesn't differentiate between
                         paths and has no knowledge about the Association.
+                        NAT will only need to parse INIT and look for RJ option when involved in
+                        a Distributed Endpoint scenario, where it needs to discriminate between
+                        new Association Requests, the RJ option will be used for interworking
+                        with the Load Balancer.
                         NAT function applies the same rules in case of collision (see
                         <xref target="mbitport" />
                         )
@@ -1207,11 +1215,8 @@ used by NAT functions and SCTP endpoints.
         <section>
                     <name>Endpoint Considerations</name>
                     <t>
-                        When the Endpoint receives an INIT chunk with RJ option set, it MUST check that the
-                        included parameters Internal-Port, Remote-Port, Internal-VTag and Remote-VTag 
-                        belong to an existing Association, in that case it MUST reply with INIT ACK specifying
-                        the existing Remote-VTag, no other actions SHOULD be performed. If the parameters
-                        are not identified, the Endpoint SHOULD reply with ABORT.
+                        When the Endpoint receives an INIT chunk with RJ option set, it will ignore
+                        the RJ option and handle INIT as in the legacy case.
                     </t>
                     <t>
                         The Endpoint originating INIT chunk with RJ option set can receive different
@@ -1220,9 +1225,7 @@ used by NAT functions and SCTP endpoints.
                     <ul>
                         <li>
                             <t>
-                                When receiving INIT ACK, it will check that the Remote-VTag is the
-                                same as the Remote-VTag being used for the current Association. In
-                                this case the path probing is complete, the NATs on the path are
+                                When receiving INIT ACK, it will assume the NATs on the path are
                                 properly set and the Endpoint can continue with the ASCONF procedure. 
                             </t>
                         </li>
@@ -1240,15 +1243,7 @@ used by NAT functions and SCTP endpoints.
                                 The Endpoint SHOULD retry after a time greather than 4 * HB.interval.
                             </t>
                         </li>
-                        <li>
-                            <t>
-                                When receiving an INIT ACK with Remote-VTag different from the one
-                                used in the current Association, it will send an ABORT message towards
-                                the source IP address by specifying the Internal-VTag as well as the
-                                Remote-VTag received and wait for ABORT procedure to be completed.
-                                Then the Endpoint SHOULD retry after a time greather than 4 * HB.interval.
-                            </t>
-                        </li>
+
                     </ul>
         </section>
 
