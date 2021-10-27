@@ -575,7 +575,7 @@ Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
 
               if lookup(Int-Port, Rem-Port, Rem-Addr) == false
                      Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
-              Returns(control block)                  
+                     Returns(control block)                  
               forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
               Translates To:
@@ -638,13 +638,13 @@ It returns the corresponding entry of the NAT binding table.
                                              Int-VTag
 
               if lookup(Int-Port, Rem-Port, Rem-Addr) == true
-                    Returns(NAT-State control block containing Int-Addr)                  
-                    forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
+                 Returns(NAT-State control block containing Int-Addr)                  
+                 forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)
 
                 Translates To:
 
-                Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
-                                  Int-VTag
+ Int-Addr:Int-Port <------ Rem-Addr:Rem-Port
+                   Int-VTag
 ]]>
                 </artwork>
                 <t>In the case where the Lookup function fails because it does not find an
@@ -688,6 +688,9 @@ entry, the SCTP packet is dropped.</t>
                 <xref target='errcause' />
                 describe chunks
 and error causes sent by NAT functions and received by SCTP endpoints.
+                <xref target='newparam' />
+                describes parameters sent by SCTP endpoints and
+used by NAT functions and SCTP endpoints.
             </t>
         <section anchor='chunks'>
                 <name>Modified Chunks</name>
@@ -829,6 +832,40 @@ and error causes sent by NAT functions and received by SCTP endpoints.
             </section>
         </section>
 
+        <section anchor='newparam'>
+            <name>New Parameters</name>
+            <t>
+                This section defines new parameters and their valid appearance
+                defined by this document.
+            </t>
+            <section anchor='repetita_juvant'>
+                <name>Repetita Juvant Parameter</name>
+                <t>
+                    Repetita Juvant is a latin phase standing for "repeating does good". 
+                    It's sually said as a jocular remark to defend the speaker's |or writer's| 
+                    choice to repeat some important piece of information to ensure reception by the audience.
+                </t>
+                <t>
+                    The RJ parameter is used to indicate that INIT chunk is the repetition
+                    of an already sent one even if it comes from a different source address.
+                    It's used from either peers before sending ASCONF in order to setup the
+                    NATs in the path.
+                    This parameter holds the Internal as well as the Remote verification Tags
+                    that will be used by the remote peer for validation.
+                </t>
+                <artwork align="left">
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|         Type = 0xXXXX         |         Length = 12           |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                   Internal Verification Tag                   |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                    Remote Verification Tag                    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+</artwork>
+        </section>
+        </section>
     </section>
         
 
@@ -926,7 +963,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                     a Distributed Endpoint to handle the traffic.
                     Functionally, it's important that Load Balancer provides NAT a way
                     way for assigning Associations to multiple SCTP Hosts and being able
-                    recognizing whether an Association Request belongs
+                    recognizing whether an Association Request with RJ Option set belongs
                     to and existing Association and what SCTP Host is in charge for that.
                 </t>
         </section>
@@ -1024,7 +1061,7 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                         ).
                     </t>
                     <t>
-                        If INIT chunk is addressing a Distributed Endpoint,
+                        If the INIT chunk contains the RJ option and the Endpoint is Distributed,
                         NAT will involve the Load Balancer function for retrieving the Internal-Address 
                         of the SCTP Host handling the Association.
                         If the Load Balancer cannot relate the INIT chunk to an existing Association, 
@@ -1132,8 +1169,10 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                     further external IP addresses for the peer to use, but
                     before adding each IP address it must be created the
                     needed set of Entries in all NAT functions towards all the
-                    peer's IP addresses. An INIT chunk SHOULD be sent towards all 
-                    peers IP addresses using a path
+                    peer's IP addresses. An INIT chunk containing a RJ option
+                    (see
+                    <xref target="repetita_juvant" />
+                    ) SHOULD be sent towards all peers IP addresses using a path
                     selector that is expected to result in another external
                     addres than association creation.  The result from that INIT
                     is according to the given rules for Association setup (see
@@ -1320,7 +1359,7 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
-+--------------------------}|   INIT    |           |           |     |
++--------------------------}| INIT RJ   |           |           |     |
 |       |       |           +----------}|           |           |     |
 |       |       |           |           +----------------------}|     |
 |       |       |           |           |{----------------------+     |
@@ -1334,7 +1373,7 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |{----------+           |           |     |
 |{--------------------------+ ASCONF ACK|           |           |     |
 |       |       |           |           |           |           |     |
-|       |       |           |   INIT    |{----------------------+     |
+|       |       |           | INIT RJ   |{----------------------+     |
 |       |       |           |{----------+           |           |     |
 |{--------------------------+           |           |           |     |
 +--------------------------}|           |           |           |     |
@@ -1361,13 +1400,13 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
-|       |       |           |   INIT    |           |{----------+     |
+|       |       |           | INIT RJ   |           |{----------+     |
 |       |       |{----------------------------------+           |     |
 |{--------------+           |           |           |           |     |
 +--------------}|           | INIT ACK  |           |           |     |
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
-|       |       |           |   INIT    |           |{----------+     |
+|       |       |           | INIT RJ   |           |{----------+     |
 |       |       |           |{----------------------+           |     |
 |{--------------------------+           |           |           |     |
 +--------------------------}| INIT ACK  |           |           |     |
@@ -1381,14 +1420,14 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           |           |           |           |     |   
-+--------------}|           |   INIT    |           |           |     |
++--------------}|           | INIT RJ   |           |           |     |
 |       |       +----------------------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           | INIT ACK  |           |{----------+     |
 |       |       |{----------------------------------+           |     |
 |{--------------+           |           |           |           |     |
 |       |       |           |           |           |           |     |
-+--------------------------}|   INIT    |           |           |     |    
++--------------------------}| INIT RJ   |           |           |     |    
 |       |       |           +----------------------}|           |     |
 |       |       |           |           |           +----------}|     |
 |       |       |           | INIT ACK  |           |{----------+     |
