@@ -1,4 +1,4 @@
-# draft-ietf-tsvwg-natsupp
+# draft-porfiri-tsvwg-sctp-natsupp
 
 This repository is used to work on the standards track RFC describing
 an SCTP specific way of doing NAT providing the features of NAPT for SCTP.
