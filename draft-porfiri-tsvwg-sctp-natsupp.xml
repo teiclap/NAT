@@ -10,7 +10,7 @@
         <title abbrev='SCTP NAT Support'>
 Stream Control Transmission Protocol (SCTP) Network Address Translation Support
 </title>
-        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-00" />
+        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-01" />
 
         <!-- *************** CLAUDIO PORFIRI ***************** -->
         <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
