@@ -48,7 +48,7 @@ features of NAPT in the single point and multipoint traversal scenario.</t>
     </front>
 
     <middle>
-    <section>
+        <section>
             <name>Introduction</name>
             <t>
                 Stream Control Transmission Protocol (SCTP)
@@ -210,9 +210,9 @@ In some cases, where the NAT function supports SCTP-aware NAT, but one of the
 two hosts does not support the feature, communication can possibly occur in a
 limited way.
 For example, only one host can have a connection when a collision case occurs.</t>
-    </section>
+        </section>
 
-    <section anchor='conventions'>
+        <section anchor='conventions'>
             <name>Conventions</name>
             <t>
                 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -224,9 +224,9 @@ BCP 14
                 when,
 and only when, they appear in all capitals, as shown here.
             </t>
-    </section>
+        </section>
 
-    <section anchor='terminology'>
+        <section anchor='terminology'>
             <name>Terminology</name>
             <t>
                 This document uses the following terms, which are depicted in
@@ -255,7 +255,7 @@ Internal-Address.</t>
                         ) that the internal host has chosen for an
 association.
 The VTag is a unique 32-bit tag that accompanies any incoming SCTP packet
-for this association to the Internal-Address. 
+for this association to the Internal-Address.
                     </t>
                 </dd>
                 <dt>Remote-Address (Rem-Addr)</dt>
@@ -274,7 +274,7 @@ for this association to the Internal-Address.
                         )
 that the host holding the Remote-Address has chosen for an association.
 The VTag is a unique 32-bit tag that accompanies any outgoing
-SCTP packet for this association to the Remote-Address. 
+SCTP packet for this association to the Remote-Address.
                     </t>
                 </dd>
                 <dt>External-Address (Ext-Addr)</dt>
@@ -298,11 +298,11 @@ address when sending packets towards a Remote-Address.</t>
    VTag               |                                   VTag
 </artwork>
             </figure>
-    </section>
+        </section>
 
-    <section>
-        <name>Motivation and Overview</name>
         <section>
+            <name>Motivation and Overview</name>
+            <section>
                 <name>SCTP NAT Traversal Scenarios</name>
                 <t>This section defines the notion of single and
 multipoint NAT traversal. </t>
@@ -352,7 +352,8 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
 
                     <t>
                         Another case where the Endpoint is ditributed among SCTP Hosts is shown in
-                        <xref target='distributed_endpoint_scenario_fig' /> where multiple Hosts
+                        <xref target='distributed_endpoint_scenario_fig' />
+                        where multiple Hosts
                         behave as Server and share the same Internal Port. A Load Balancer
                         node supports NAT when a new Association request comes.
                         The description of the Load Balancer function and its interwork 
@@ -379,7 +380,7 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
 </artwork>
                     </figure>
 
-                    
+
                     <t>Although one of the main benefits of SCTP multi-homing is redundant
 paths, in the single point traversal scenario the NAT function represents
 a single point of failure in the path of the SCTP multi-homed association.
@@ -423,9 +424,9 @@ can preserve the path diversity of a multi-homed association for the
 entire path. This in turn can improve the robustness of the
 communication.</t>
                 </section>
-        </section>
+            </section>
 
-        <section>
+            <section>
                 <name>Limitations of Classical NAPT for SCTP</name>
                 <t>
                     Using classical NAPT possibly results in changing one of the SCTP port numbers
@@ -461,9 +462,9 @@ effort at the SCTP Endpoints and at the NAT functions
                     <xref target='SCTP_aware_NAT' />
                     ).
                 </t>
-        </section>
+            </section>
 
-        <section anchor='SCTP_aware_NAT'>
+            <section anchor='SCTP_aware_NAT'>
                 <name>The SCTP-Specific Variant of NAT</name>
                 <t>
                     In this section it is allowed that there are multiple SCTP capable hosts
@@ -513,7 +514,7 @@ Internal-Address, Remote-Address, Internal-Port and Remote-Port.</t>
                     NAT is able understanding that the SCTP packet transports an INIT chunk because
 the SCTP common header will have VTAG=0 (see section 3.1 of
                     <xref target='RFC4960' />
-                )
+                    )
                 </t>
 
                 <t>The processing of outgoing SCTP packets containing an INIT chunk
@@ -532,8 +533,12 @@ message flows in this section.</t>
  Int-Addr:Int-Port ------> Rem-Addr:Rem-Port
                   Rem-VTag=0
 
-         if lookup(Int-Port, Rem-Port, Rem-Addr) == true
+         if lookup(Int-Port, Rem-Port, Rem-Addr) == true  
+            if lookup(Int-Addr, Int-Port, Rem-Port, Rem-Addr) == false
                 sendAbort(Rem-Addr, Rem-Port, Int-Addr, Int-Port, M-bit)
+            else
+                Returns(control block)
+                forwardPkt(Ext-Addr, Int-Port, Rem-Addr, Rem-Port)                    
          else       
                 Create(Int-Port, Rem-Port, Int-Addr, Rem-Addr)
                 Returns(control block)
@@ -560,6 +565,12 @@ error cause (see
                     for the format).
 The source address of the packet containing the ABORT chunk MUST be the
 destination address of the packet containing the INIT chunk.
+                </t>
+                <t>
+                    In case that there's already a a NAT binding table entry with
+the same Remote-Address, Internal-Port, Remote-Port and the same Internal-Address,
+meaning that the INIT chunk is a new attempt for the same Association, 
+the NAT entry is reused.
                 </t>
                 <t>The processing of outgoing SCTP packets containing chunks other than INIT
 is described in the following figure.</t>
@@ -605,7 +616,8 @@ message flows in this section.</t>
 
 
             if lookup(Int-Port, Rem-Port, Rem-Addr) == true
-                sendAbort(Ext-Addr, Int-Port, Rem-Addr, Rem-Port, M-bit)
+                    Returns(control block)
+                    forwardPkt(Rem-Addr, Rem-Port, Int-Addr, Int-Port)
             else
                 if INIT contains RJ option
                     send INIT-ACK to the INIT source
@@ -665,15 +677,15 @@ It returns the corresponding entry of the NAT binding table.
                 <t>In the case where the Lookup function fails because it does not find an
 entry, the SCTP packet is dropped.</t>
 
-        </section>
+            </section>
 
 
-        <section anchor='diff_with_existing_natsupp'>
-            <name>Differences with Current NAT Support Draft</name>
-<t>
+            <section anchor='diff_with_existing_natsupp'>
+                <name>Differences with Current NAT Support Draft</name>
+                <t>
     This section describes the differences with the existing draft-ietf-tsvwg-natsupp.
 </t>
-<t>
+                <t>
     The main difference is that the NAT function is simpler and doesn't require
     explicit handling of NAT missing states. 
     Actually in this proposal NAT doesn't need to parse all the SCTP
@@ -684,18 +696,18 @@ entry, the SCTP packet is dropped.</t>
     SCTP packets are seen within a certain time, NAT assumes that the association is 
     closed and will remove the related NAT-entry.
 </t>
-<t>
+                <t>
     The other difference is in the role of the SCTP User. In the current proposal it's
     up to the SCTP User to change the originating Endpoint (i.e. choose a different port number)
     if collision is detected. The current proposal guarantees that at each node being
     in a path belonging to an association, there will be only one 4-uple describing
     that association, that means the NAT doesn't need to take care of VTAG.
 </t>
+            </section>
         </section>
-    </section>
 
 
-    <section anchor='SCTP_data_format'>
+        <section anchor='SCTP_data_format'>
             <name>Data Formats</name>
             <t>
                 This section defines the formats used to support NAT traversal.
@@ -708,14 +720,14 @@ and error causes sent by NAT functions and received by SCTP endpoints.
                 describes parameters sent by SCTP endpoints and
 used by NAT functions and SCTP endpoints.
             </t>
-        <section anchor='chunks'>
+            <section anchor='chunks'>
                 <name>Modified Chunks</name>
                 <t>
                     This section presents existing chunks defined in
                     <xref target='RFC4960' />
                     for which additional flags are specified by this document.
                 </t>
-            <section anchor='mbitabort'>
+                <section anchor='mbitabort'>
                     <name>Extended ABORT Chunk</name>
                     <artwork align="left">
  0                   1                   2                   3
@@ -734,9 +746,9 @@ used by NAT functions and SCTP endpoints.
                         generated by the peer SCTP endpoint, but instead by a middle box (e.g., NAT).
                     </t>
                     <t>[NOTE to RFC-Editor: Assignment of M bit to be confirmed by IANA.]</t>
-            </section>
+                </section>
 
-            <section anchor='mbiterr'>
+                <section anchor='mbiterr'>
                     <name>Extended ERROR Chunk</name>
                     <artwork align="left">
  0                   1                   2                   3
@@ -758,11 +770,11 @@ used by NAT functions and SCTP endpoints.
                         by a middle box.
                     </t>
                     <t>[NOTE to RFC-Editor: Assignment of M bit to be confirmed by IANA.]</t>
-            </section>
+                </section>
 
-            <section anchor='mbitinitack'>
-                <name>Extended INIT-ACK Chunk</name>
-                <artwork align="left">
+                <section anchor='mbitinitack'>
+                    <name>Extended INIT-ACK Chunk</name>
+                    <artwork align="left">
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -773,25 +785,25 @@ used by NAT functions and SCTP endpoints.
 \                                                               \
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </artwork>
-                <t>
-                    The INIT ACK chunk defined in
-                    <xref target='RFC4960' />
-                    is extended to
+                    <t>
+                        The INIT ACK chunk defined in
+                        <xref target='RFC4960' />
+                        is extended to
                         add the new 'M bit'. The M bit indicates to the receiver of the INIT-ACK chunk
                         that the chunk was not generated by the peer SCTP endpoint, but instead
                         by a middle box.
-                </t>
-                <t>[NOTE to RFC-Editor: Assignment of M bit to be confirmed by IANA.]</t>
+                    </t>
+                    <t>[NOTE to RFC-Editor: Assignment of M bit to be confirmed by IANA.]</t>
+                </section>
             </section>
-        </section>
 
-        <section anchor='errcause'>
-            <name>New Error Causes</name>
-            <t>This section defines the new error causes added by this document.</t>
+            <section anchor='errcause'>
+                <name>New Error Causes</name>
+                <t>This section defines the new error causes added by this document.</t>
 
-            <section anchor='portcollide'>
-                <name>Port Number Collision Error Cause</name>
-                <artwork align="left">
+                <section anchor='portcollide'>
+                    <name>Port Number Collision Error Cause</name>
+                    <artwork align="left">
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -801,58 +813,58 @@ used by NAT functions and SCTP endpoints.
 /                                                              \
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 </artwork>
-                <dl newline="true">
-                    <dt>Cause Code: 2 bytes (unsigned integer)</dt>
-                    <dd>
-                        <t>
+                    <dl newline="true">
+                        <dt>Cause Code: 2 bytes (unsigned integer)</dt>
+                        <dd>
+                            <t>
                             This field holds the IANA defined cause code for the
                             'Port Number Collision' Error Cause.
                             IANA is requested to assign the value 0x00B2 for this cause code.
                         </t>
-                    </dd>
-                    <dt>Cause Length: 2 bytes (unsigned integer)</dt>
-                    <dd>
-                        <t>
+                        </dd>
+                        <dt>Cause Length: 2 bytes (unsigned integer)</dt>
+                        <dd>
+                            <t>
                             This field holds the length in bytes of the error cause.
                             The value MUST be the length of the Cause-Specific Information plus 4.
                         </t>
-                    </dd>
-                    <dt>Chunk: variable length</dt>
-                    <dd>
-                        <t>
+                        </dd>
+                        <dt>Chunk: variable length</dt>
+                        <dd>
+                            <t>
                             The Cause-Specific Information is filled with the chunk that caused this
                             error.
                             This can be an INIT, INIT ACK, or ASCONF chunk.
                             Note that if the entire chunk will not fit in the ERROR chunk or ABORT chunk
                             being sent then the bytes that do not fit are truncated.</t>
-                    </dd>
-                </dl>
-                <t>[NOTE to RFC-Editor: Assignment of cause code to be confirmed by IANA.]</t>
+                        </dd>
+                    </dl>
+                    <t>[NOTE to RFC-Editor: Assignment of cause code to be confirmed by IANA.]</t>
+                </section>
+
             </section>
 
-        </section>
-
-        <section anchor='newparam'>
-            <name>New Parameters</name>
-            <t>
+            <section anchor='newparam'>
+                <name>New Parameters</name>
+                <t>
                 This section defines new parameters and their valid appearance
                 defined by this document.
             </t>
-            <section anchor='repetita_juvant'>
-                <name>Repetita Juvant Parameter</name>
-                <t>
+                <section anchor='repetita_juvant'>
+                    <name>Repetita Juvant Parameter</name>
+                    <t>
                     Repetita Juvant is a latin phase standing for "repeating does good". 
                     It's sually said as a jocular remark to defend the speaker's (or writer's) 
                     choice to repeat some important piece of information to ensure reception by the audience.
                 </t>
-                <t>
+                    <t>
                     The RJ Parameter is used as Optional Parameter in the INIT chunk.
                     The RJ parameter is used to indicate that INIT chunk is the repetition
                     of an already sent one even if it comes from a different source address.
                     It's used from either peers before sending ASCONF in order to setup the
                     NATs in the path.
                 </t>
-                <artwork align="left">
+                    <artwork align="left">
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -860,12 +872,12 @@ used by NAT functions and SCTP endpoints.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 </artwork>
+                </section>
+            </section>
         </section>
-        </section>
-    </section>
-        
 
-    <section>
+
+        <section>
             <name>Procedures for SCTP Endpoints and NAT Functions</name>
             <t>If an SCTP endpoint is behind an SCTP-aware NAT, a
                 number of problems can arise as it tries to communicate with its peers:
@@ -924,7 +936,7 @@ used by NAT functions and SCTP endpoints.
                 as described below.
             </t>
 
-        <section anchor='setup'>
+            <section anchor='setup'>
                 <name>Association Setup Considerations for Endpoints</name>
                 <t>
                     The association setup procedure defined in
@@ -948,9 +960,9 @@ used by NAT functions and SCTP endpoints.
                     MUST be used.
                 </t>
 
-        </section>
+            </section>
 
-        <section anchor='setup_nat'>
+            <section anchor='setup_nat'>
                 <name>Association Setup Considerations for NAT</name>
                 <t>
                     When Endpoint is Distributed, NAT needs the cooperation of a Load Balancer
@@ -960,9 +972,9 @@ used by NAT functions and SCTP endpoints.
                     Functionally, it's important that Load Balancer provides NAT a way
                     for assigning Associations to multiple SCTP Hosts.
                 </t>
-        </section>
+            </section>
 
-        <section anchor='mbitport'>
+            <section anchor='mbitport'>
                 <name>Handling of Internal Port Number Collisions</name>
                 <t>
                     Consider the case where two hosts in the Internal-Address space want to
@@ -1033,7 +1045,7 @@ used by NAT functions and SCTP endpoints.
                     </li>
                 </ul>
 
-        <section>
+                <section>
                     <name>NAT Function Considerations</name>
                     <t>
                         NAT function checks for collision only on packets containing INIT chunk.
@@ -1058,15 +1070,15 @@ used by NAT functions and SCTP endpoints.
                         If the INIT chunk contains the RJ option the NAT function MUST NOT forward
                         the INIT chunk to the SCTP Host but it MUST reply to the remote peer with INIT-ACK
                         chunk with the M bit set. The M bit is a new bit defined by this document to express 
-                        to SCTP that the source of this packet is a "middle" box (see                       
+                        to SCTP that the source of this packet is a "middle" box (see
                         <xref target="mbitinitack" />
                         ).
                         The information contained in INIT-ACK chunk SHOULD be copied from the INIT chunk.
                         The value for Initiate Tag and Initial TSN MAY be chosen random.
                     </t>
-        </section>
+                </section>
 
-        <section>
+                <section>
                     <name>Endpoint Considerations</name>
                     <t>The sender of the packet containing the INIT chunk upon reception of a packet containing
                     an ABORT chunk with M bit set and the appropriate error cause code for
@@ -1075,13 +1087,13 @@ used by NAT functions and SCTP endpoints.
                     association setup procedure after choosing a new Internal Port.
                 </t>
 
-        </section>
-    </section>
+                </section>
+            </section>
 
 
-        <section anchor='restart'>
+            <section anchor='restart'>
                 <name>Handling of Missing State</name>
-        <section>
+                <section>
                     <name>NAT Function Considerations</name>
                     <t>
                         When experiencing a restart, the NAT function will start handling SCTP
@@ -1102,8 +1114,8 @@ used by NAT functions and SCTP endpoints.
                     If the NAT function receives a packet not containing an INIT chunk from the external network
                     for which the lookup procedure does not find an entry in the NAT binding table,
                     it must silently drop it.</t>
-        </section>
-        <section>
+                </section>
+                <section>
                     <name>Endpoint Considerations</name>
                     <t>Upon restart of a NAT function, the endpoint will experience connectivity
                     interruption, depending on the Association state it will keep on retrying
@@ -1115,10 +1127,10 @@ used by NAT functions and SCTP endpoints.
                     connectivity unavalilability of more than 4 * HB.interval as NAT needs to rebuild
                     the NAT Table with the existing Associations first. 
                     </t>
-        </section>
-        </section>
+                </section>
+            </section>
 
-        <section anchor='fragmentation'>
+            <section anchor='fragmentation'>
                 <name>Handling of Fragmented SCTP Packets by NAT Functions</name>
                 <t>
                     SCTP minimizes the use of IP-level fragmentation. However, it
@@ -1138,9 +1150,9 @@ used by NAT functions and SCTP endpoints.
                 "Fragmentation needed and DF set" ICMPv4 or PTB ICMPv6 message to the
                 internal host.
                 This allows for a faster recovery from this packet drop.</t>
-        </section>
+            </section>
 
-        <section anchor='multihomed'>
+            <section anchor='multihomed'>
                 <name>Multipoint Traversal Considerations for Endpoints</name>
                 <t>If a multi-homed SCTP endpoint behind a NAT function connects to a peer,
                 it MUST first set up the association single-homed with only one destination
@@ -1177,7 +1189,7 @@ used by NAT functions and SCTP endpoints.
                     send INIT chunks with RJ option towards from all its own IP Addresses towards
                     that address in order to properly set all the NATs in the path.
                 </t>
-        <section>
+                <section>
                     <name>NAT Function Considerations</name>
                     <t>
                         NAT function differentiates the behavior towards INIT chunk depending on
@@ -1189,9 +1201,9 @@ used by NAT functions and SCTP endpoints.
                         the received INIT chunk.
                     </t>
 
-        </section>
+                </section>
 
-        <section>
+                <section>
                     <name>Endpoint Considerations</name>
                     <t>
                         When the Endpoint receives an INIT chunk with RJ option set, it will ignore
@@ -1224,27 +1236,49 @@ used by NAT functions and SCTP endpoints.
                         </li>
 
                     </ul>
+                </section>
+
+
+            </section>
+            <section anchor='path_probing'>
+                <name>Path Probing considerations</name>
+                <t>
+                    The SCTP protocol relies on continous path probing by means of data sending
+                    or using the Heartbeat mechanism as specified in section 5.4 of <xref target='RFC4960' /> 
+                    The adoption of the NAT mechanisms as described in this document introduces
+                    a criticality in the Path Probing mechanism of SCTP.
+                </t>
+                <t>
+                    The problem happens when, due to network problem, one or more secondary paths
+                    belonging to an Association will experience timeout in Path probing so than in
+                    some of the NAT functions used in the path there's no SCTP traffic for the
+                    given Association, causing the NAT entry to be canceled because of supervision
+                    timeout.
+                </t>
+                <t>
+                    It is recommended that before sending HEARTBEAT to an UNCONFIRMED address,
+                    an INIT chunk with RJ paramter set is sent so that NAT functions in the path
+                    can setup entries in the NAT tables properly.
+                </t>
+
+            </section>
         </section>
 
 
-        </section>
-    </section>
-
-
-
-<section>
-    <name>Examples of Operation</name>
-    <t>
-        This section describes examples of Association Establishements using
+        <section>
+            <name>Examples of Operation</name>
+            <t>
+                This section describes examples of Association Establishements using
         the reference scenario depicted in
-        <xref target='example_operation_fig'/>.
+                <xref target='example_operation_fig' />
+                .
         Hosts A1 and A2 implement a distributed client towards the same remote Host. 
         Hosts B1 and B2 implement a distributed Endpoint 'B' acting as Server. 
         The Load Balancer functionality is not shown as it doesn't affect SCTP protocol.
-    </t>
-    <figure anchor='example_operation_fig'>
-        <name>Parallel NAT with distributed endpoints Scenario</name>
-        <artwork align="center">
+            </t>
+            <figure anchor='example_operation_fig'>
+                <name>Parallel NAT with distributed endpoints Scenario</name>
+                <artwork align="center">
       Internal     |           External          |      Internal
                 +------+                      +------+
              +==|NAT A |==\    /--\/--\    /==|NAT C |==+
@@ -1260,17 +1294,19 @@ used by NAT functions and SCTP endpoints.
 |        +-+       |                             |         +--+        |
 +--------+         |                             |            +--------+
 </artwork>
-    </figure>
-    <section anchor='sh_success_section'>
-        <name>Single Homed Association Setup</name>
-        <t>
-            This section describes a successfull Association Establishment from A1 towards
+            </figure>
+            <section anchor='sh_success_section'>
+                <name>Single Homed Association Setup</name>
+                <t>
+                    This section describes a successfull Association Establishment from A1 towards
             the distributed endpoint B.
-            The sequence chart is shown in <xref target='sh_success_fig'/>.
-        </t>
-        <figure anchor='sh_success_fig'>
-            <name>Single Homed successfull Association Setup</name>
-            <artwork align="center">
+            The sequence chart is shown in
+                    <xref target='sh_success_fig' />
+                    .
+                </t>
+                <figure anchor='sh_success_fig'>
+                    <name>Single Homed successfull Association Setup</name>
+                    <artwork align="center">
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
@@ -1283,21 +1319,21 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |{--------------+ INIT ACK  |           |           |           |     |
 |       |       |           |           |           |           |     |
             </artwork>
-        </figure>
-    </section>
+                </figure>
+            </section>
 
-    <section>
-        <name>Single Homed Association Setup with Collision</name>
-        <t>
-            This section describes a successfull Association Establishment from A2 towards
+            <section>
+                <name>Single Homed Association Setup with Collision</name>
+                <t>
+                    This section describes a successfull Association Establishment from A2 towards
             the distributed endpoint B. The collision happens at NAT A. 
             The sequence chart is shown in
-            <xref target='sh_congest1_fig' />
-            .
-        </t>
-        <figure anchor='sh_congest1_fig'>
-            <name>Single Homed successfull Association Setup after congestion</name>
-            <artwork align="center">
+                    <xref target='sh_congest1_fig' />
+                    .
+                </t>
+                <figure anchor='sh_congest1_fig'>
+                    <name>Single Homed successfull Association Setup after congestion</name>
+                    <artwork align="center">
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
@@ -1313,23 +1349,24 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       {-------+ INIT ACK  |           |           |           |     |
 |       |       |           |           |           |           |     |
             </artwork>
-        </figure>
-    </section>
+                </figure>
+            </section>
 
-    <section anchor='mh_success_section'>
-        <name>Multi Homed Association Setup</name>
-        <t>
-            This section describes how the single homed established at <xref target= 'sh_success_section'/>
-            becomes multihomed. Note that the decision for what peer has to handle the INIT message requires
+            <section anchor='mh_success_section'>
+                <name>Multi Homed Association Setup</name>
+                <t>
+                    This section describes how the single homed established at
+                    <xref target='sh_success_section' />
+                    becomes multihomed. Note that the decision for what peer has to handle the INIT message requires
             support of Load Balancer. It's assumed that a Load Balancer exists and provides NAT with the
             right information.
             Success happens at all steps.
-            <xref target='mh_success_fig' />
-            .
-        </t>
-        <figure anchor='mh_success_fig'>
-            <name>Multi Homed successfull Association Setup</name>
-            <artwork align="center">
+                    <xref target='mh_success_fig' />
+                    .
+                </t>
+                <figure anchor='mh_success_fig'>
+                    <name>Multi Homed successfull Association Setup</name>
+                    <artwork align="center">
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
@@ -1352,21 +1389,21 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
    
             </artwork>
-        </figure>
-    </section>
+                </figure>
+            </section>
 
-    <section>
-        <name>Multi Homed Association Setup</name>
-        <t>
-            This section describes how the multihome homed established at
-            <xref target='mh_success_section' />
-            becomes multihomed from the other peer. Success happens at all steps.
-            <xref target='mhmh_success_fig' />
-            .
-        </t>
-        <figure anchor='mhmh_success_fig'>
-            <name>Multi Homed successfull Association Setup</name>
-            <artwork align="center">
+            <section>
+                <name>Multi Homed Association Setup</name>
+                <t>
+                    This section describes how the multihome homed established at
+                    <xref target='mh_success_section' />
+                    becomes multihomed from the other peer. Success happens at all steps.
+                    <xref target='mhmh_success_fig' />
+                    .
+                </t>
+                <figure anchor='mhmh_success_fig'>
+                    <name>Multi Homed successfull Association Setup</name>
+                    <artwork align="center">
 
 A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
@@ -1398,12 +1435,12 @@ A1      A2      NAT A       NAT B       NAT C       NAT D       B1    B2
 |       |       |           |           |           |           |     |
 
             </artwork>
-        </figure>
-    </section>
+                </figure>
+            </section>
 
-</section>
+        </section>
 
-<section>
+        <section>
             <name>IANA Considerations</name>
             <t>[NOTE to RFC-Editor: "RFCXXXX" is to be replaced by the RFC number you
 assign this document.]</t>
@@ -1413,7 +1450,7 @@ parameter types are tentative and to be confirmed by IANA.]</t>
 described in this section.
 The requested changes are described below.</t>
 
-    <section>
+            <section>
                 <name>New Chunk Flags for Two Existing Chunk Types</name>
                 <t>
                     As defined in
@@ -1536,9 +1573,9 @@ by IANA for the ABORT chunk. The requested value of the M bit is 0x02.
                         </tr>
                     </tbody>
                 </table>
-    </section>
+            </section>
 
-    <section>
+            <section>
                 <name>Four New Error Causes</name>
                 <t>Four error causes have to be assigned by IANA.
 It is requested to use the values given below.</t>
@@ -1576,9 +1613,9 @@ registry for SCTP:</t>
                         </tr>
                     </tbody>
                 </table>
-    </section>
+            </section>
 
-    <section>
+            <section>
                 <name>Two New Chunk Parameter Types</name>
                 <t>Two chunk parameter types have to be assigned by IANA.
 IANA is requested to assign these values from the pool of parameters with the
@@ -1607,11 +1644,11 @@ registry for SCTP:</t>
                         </tr>
                     </tbody>
                 </table>
-    </section>
+            </section>
 
-</section>
+        </section>
 
-<section>
+        <section>
             <name>Security Considerations</name>
             <t>State maintenance within a NAT function is always a subject of possible
 Denial Of Service attacks. This document recommends that at
@@ -1655,7 +1692,7 @@ incoming SCTP packets.</t>
                     <t>Instantiating mapping entries to cause NAT collision.</t>
                 </li>
             </ul>
-</section>
+        </section>
 
     </middle>
 
