@@ -4,13 +4,13 @@
 <?rfc compact='yes'?>
 <?rfc subcompact='no'?>
 
-<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-porfiri-tsvwg-sctp-natsupp-02" version="3">
+<rfc xmlns:xi="http://www.w3.org/2001/XInclude" xml:lang="en" ipr="trust200902" submissionType="IETF" consensus="true" category="std" docName="draft-porfiri-tsvwg-sctp-natsupp-03" version="3">
 
     <front>
         <title abbrev='SCTP NAT Support'>
 Stream Control Transmission Protocol (SCTP) Network Address Translation Support
 </title>
-        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-02" />
+        <seriesInfo name="Internet-Draft" value="draft-porfiri-tsvwg-sctp-natsupp-03" />
 
         <!-- *************** CLAUDIO PORFIRI ***************** -->
         <author initials='C.' surname='Porfiri' fullname='Claudio Porfiri'>
@@ -286,6 +286,7 @@ address when sending packets towards a Remote-Address.</t>
             <figure anchor='terminology_fig'>
                 <name>Basic Network Setup</name>
                 <artwork align="center">
+                    <![CDATA[
   Internal Network    |         External Network
                       |
            Internal   |   External              Remote
@@ -296,6 +297,7 @@ address when sending packets towards a Remote-Address.</t>
            Internal   |            \--/\--/     Remote
  Internal    Port     |                           Port   Remote
    VTag               |                                   VTag
+]]>   
 </artwork>
             </figure>
         </section>
@@ -318,6 +320,8 @@ single NAT function, as shown in
                     <figure anchor='single_nat_scenario_fig'>
                         <name>Single NAT Function Scenario</name>
                         <artwork align="center">
+                            <![CDATA[
+
   Internal Network    |       External Network
                       |
                       |               /--\/--\
@@ -326,6 +330,7 @@ single NAT function, as shown in
 +--------+         +-----+           \        /          +--------+
                       |               \--/\--/
                       |
+]]>                      
 </artwork>
                     </figure>
 
@@ -338,6 +343,8 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
                     <figure anchor='serial_nat_szenario_fig'>
                         <name>Serial NAT Functions Scenario</name>
                         <artwork align="center">
+                            <![CDATA[
+
       Internal | External : Internal | External
                |          :          |
                |          :          |       /--\/--\
@@ -346,6 +353,7 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
 +--------+  +-----+       :       +-----+   \        /   +--------+
                |          :          |       \--/\--/
                |          :          |
+]]>               
 </artwork>
                     </figure>
 
@@ -362,6 +370,8 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
                     <figure anchor='distributed_endpoint_scenario_fig'>
                         <name>Distributed Endpoint Scenario</name>
                         <artwork align="center">
+                            <![CDATA[
+
   Internal Network    |       External Network
                       |
                       |               /--\/--\
@@ -376,7 +386,7 @@ i.e., multiple NAT functions in the forwarding path between two endpoints.
 +--------+    |       |     | Load     |
 | Host C |====+       |     | Balancer |
 +--------+            |     +----------+
-
+]]>
 </artwork>
                     </figure>
 
@@ -405,6 +415,8 @@ An example is shown in
                     <figure anchor='parallel_nat_scenario_fig'>
                         <name>Parallel NAT Functions Scenario</name>
                         <artwork align="center">
+                            <![CDATA[
+
          Internal      |      External
                     +------+             /---\/---\
             /=======|NAT A |=========\  /          \
@@ -415,6 +427,7 @@ An example is shown in
             \=======|NAT B |========/    \---\/---/
                     +------+
                        |
+]]>                       
 </artwork>
                     </figure>
                     <t>This case does not apply to a single-homed SCTP association (i.e.,
@@ -679,6 +692,36 @@ entry, the SCTP packet is dropped.</t>
 
             </section>
 
+            <section anchor='stepwise_natsupp'>
+                <name>Compatibility and increamental deployment</name>
+                <t>
+    The current proposal for adding SCTP-capable NAT function is meant to provide
+    backwards compatibility in both involved functionality and being compatible
+    with legacy SCTP remote terminations that doesn't implement it.
+    </t>
+                <t>
+        The compatibility at NAT tracking mechanism allows the NAT functionto be 
+        able hiding also SCTP stack that doesn't implement the current specfication,
+        at the same time an SCTP stack implementing the current specification canbe deployed 
+        in a NAT scenario where the NAT doesn't implement it.
+        In either cases the SCTP termination will be accomplished with limitations
+        as described earlier.
+    </t>
+                <t>
+    The compatibility at network level is proposed in a way that makes it possible 
+    deploying a cluster of SCTP termination behind a NAT function
+    still with full compatibility towards legacy networking.
+    As an example, the scenario described in
+    <xref target='single_nat_scenario_fig' />
+    shows Host A being hidden by NAT and Host B being directly connected to the internet.
+    In such case only Host A and NAT need to implement the current specification
+    whilst Host B can neglect it.
+    The same applies to more complex scenarios such as the ones shown in
+    <xref target='distributed_endpoint_scenario_fig' />
+    or in
+    <xref target='parallel_nat_scenario_fig' />.
+                </t>
+            </section>
 
             <section anchor='diff_with_existing_natsupp'>
                 <name>Differences with Current NAT Support Draft</name>
@@ -704,6 +747,7 @@ entry, the SCTP packet is dropped.</t>
     that association, that means the NAT doesn't need to take care of VTAG.
 </t>
             </section>
+
         </section>
 
 
@@ -1244,7 +1288,8 @@ used by NAT functions and SCTP endpoints.
                 <name>Path Probing considerations</name>
                 <t>
                     The SCTP protocol relies on continous path probing by means of data sending
-                    or using the Heartbeat mechanism as specified in section 5.4 of <xref target='RFC4960' /> 
+                    or using the Heartbeat mechanism as specified in section 5.4 of
+                    <xref target='RFC4960' />
                     The adoption of the NAT mechanisms as described in this document introduces
                     a criticality in the Path Probing mechanism of SCTP.
                 </t>
