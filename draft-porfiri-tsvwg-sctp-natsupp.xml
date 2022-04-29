@@ -137,9 +137,39 @@ and only triggered by the detection of an SCTP packet containing an INIT chunk.<
             <t>When considering SCTP-aware NAT it is possible to have
 multiple levels of support. At each level, the Internal
 Host, Remote Host, and NAT function does or does not support the
-procedures described in this document. The following table
+                procedures described in this document.            </t>
+                <t>
+                    The reference configuration for NAT support is depicted in the following figure:
+                </t>
+            <figure anchor='terminology_fig'>
+                <name>Basic Network Setup</name>
+                <artwork align="center">
+                    <![CDATA[
+  Internal Network    |         External Network
+                      |
+           Internal   |   External              Remote
+           Address    |   Address  /--\/--\    Address
++--------+         +-----+        /        \           +--------+
+| Host A |=========| NAT |=======| Network  |==========| Host B |
++--------+         +-----+        \        /           +--------+
+           Internal   |            \--/\--/     Remote
+ Internal    Port     |                           Port   Remote
+   VTag               |                                   VTag
+]]>
+                </artwork>
+            </figure>
+            <t>
+                In the above <xref target='terminology_fig' /> the NAT hides Host A
+                whereas Host B is directly connected to the public internet.
+                Host A has a private IP address, NAT and Host B have public IP addresses.
+            </t>
+            <t>
+            The following table
 illustrates the results of the various combinations of
-support and if communications can occur between two endpoints.</t>
+support and if communications can occur between two endpoints with reference to
+                <xref target='terminology_fig' />, the NAT adaptation is the
+                one described in the current document.
+            </t>
             <table anchor="communication_table" align="center">
                 <name>Communication possibilities</name>
                 <thead>
@@ -161,7 +191,7 @@ support and if communications can occur between two endpoints.</t>
                         <td align="center">Support      </td>
                         <td align="center">Support   </td>
                         <td align="center">No Support   </td>
-                        <td align="center">Limited      </td>
+                        <td align="center">Yes      </td>
                     </tr>
                     <tr>
                         <td align="center">Support      </td>
@@ -206,10 +236,16 @@ NAT function does not support SCTP-aware NAT.
 This assumes that the NAT function does not handle SCTP packets at all and
 all SCTP packets sent from behind a NAT function are discarded by
 the NAT function.
-In some cases, where the NAT function supports SCTP-aware NAT, but one of the
-two hosts does not support the feature, communication can possibly occur in a
+            </t>
+            <t>
+In some cases, where the NAT function supports SCTP-aware NAT but the
+local host does not support the feature, communication can possibly occur in a
 limited way.
 For example, only one host can have a connection when a collision case occurs.</t>
+<t>
+    When a SCTP host is deployed behind a NAT and both support SCTP-aware NAT,
+    the communication will suceed independently from the remote peer.
+</t>
         </section>
 
         <section anchor='conventions'>
@@ -283,23 +319,7 @@ SCTP packet for this association to the Remote-Address.
 address when sending packets towards a Remote-Address.</t>
                 </dd>
             </dl>
-            <figure anchor='terminology_fig'>
-                <name>Basic Network Setup</name>
-                <artwork align="center">
-                    <![CDATA[
-  Internal Network    |         External Network
-                      |
-           Internal   |   External              Remote
-           Address    |   Address  /--\/--\    Address
-+--------+         +-----+        /        \           +--------+
-| Host A |=========| NAT |=======| Network  |==========| Host B |
-+--------+         +-----+        \        /           +--------+
-           Internal   |            \--/\--/     Remote
- Internal    Port     |                           Port   Remote
-   VTag               |                                   VTag
-]]>   
-</artwork>
-            </figure>
+
         </section>
 
         <section>
@@ -728,8 +748,17 @@ entry, the SCTP packet is dropped.</t>
                 <t>
     This section describes the differences with the existing draft-ietf-tsvwg-natsupp.
 </t>
+<t>
+    From a functional perspective, the major difference between is in the compatibility
+    towards legacy SCTP hosts. The NAT-adaptation specified in this document allows
+    interoperability between SCTP hosts even when the remote peer hasn't implemented it.
+    Not even is mandatory that all the NAT devices in the path do implement it as long
+    as they allow SCTP packets to pass through transparently.
+    On the existing draft-ietf-tsvwg-natsupp, the specification needs to be implemented
+    on all SCTP Hosts and all NAT devices in the network in order to work. 
+</t>
                 <t>
-    The main difference is that the NAT function is simpler and doesn't require
+    The main technical difference is that the NAT function is simpler and doesn't require
     explicit handling of NAT missing states. 
     Actually in this proposal NAT doesn't need to parse all the SCTP
     payloads. NAT only parses INIT chunks, filtering of SCTP packets containing
